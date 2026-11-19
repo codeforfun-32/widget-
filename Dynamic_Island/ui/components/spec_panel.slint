@@ -1,0 +1,115 @@
+import { Theme } from "../styles/themes.slint";
+import { Icons } from "../styles/icons.slint";
+import { Icon, IconTab } from "controls.slint";
+
+component StatRow inherits Rectangle {
+    in property <string> d;
+    in property <float> value;
+    in property <string> label;
+    height: 22px;
+
+    Icon {
+        x: 0px;
+        y: 3px;
+        width: 16px;
+        height: 16px;
+        d: root.d;
+        tint: Theme.text-dim;
+    }
+    Rectangle {
+        x: 26px;
+        y: 8px;
+        width: parent.width - 26px - 104px;
+        height: 6px;
+        border-radius: 3px;
+        background: Theme.track;
+
+        Rectangle {
+            x: 0px;
+            y: 0px;
+            width: parent.width * Math.clamp(root.value, 0, 1);
+            height: parent.height;
+            border-radius: 3px;
+            background: root.value > 0.85 ? Theme.danger : Theme.accent;
+            animate width { duration: 400ms; easing: ease-out; }
+        }
+    }
+    Text {
+        x: parent.width - 96px;
+        y: 0px;
+        width: 96px;
+        height: parent.height;
+        text: root.label;
+        color: Theme.text;
+        font-size: 12px;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+    }
+}
+
+export component SpecPanel inherits Rectangle {
+    in property <float> cpu;
+    in property <float> ram;
+    in property <float> gpu;     // below 0 = not available
+    in property <float> batt;
+    in property <string> ram-text;
+    in property <string> down;
+    in property <string> up;
+    in property <bool> batt-present;
+    in property <bool> charging;
+    in property <bool> pinned;
+    callback pin-toggled();
+
+    StatRow {
+        x: 0px; y: 0px; width: parent.width;
+        d: Icons.chip;
+        value: root.cpu;
+        label: "\{Math.round(root.cpu * 100)}%";
+    }
+    StatRow {
+        x: 0px; y: 26px; width: parent.width;
+        d: Icons.ram;
+        value: root.ram;
+        label: root.ram-text;
+    }
+    StatRow {
+        x: 0px; y: 52px; width: parent.width;
+        d: Icons.gpu;
+        value: root.gpu < 0 ? 0 : root.gpu;
+        label: root.gpu < 0 ? "N/A" : "\{Math.round(root.gpu * 100)}%";
+    }
+    StatRow {
+        x: 0px; y: 78px; width: parent.width;
+        visible: root.batt-present;
+        d: Icons.battery;
+        value: root.batt;
+        label: root.charging ? "\{Math.round(root.batt * 100)}% charging" : "\{Math.round(root.batt * 100)}%";
+    }
+
+    // network speed
+    Icon { x: 0px; y: 108px; width: 16px; height: 16px; d: Icons.down; tint: Theme.accent; }
+    Text {
+        x: 22px; y: 104px; width: 100px; height: 24px;
+        text: root.down;
+        color: Theme.text;
+        font-size: 12px;
+        vertical-alignment: center;
+    }
+    Icon { x: 130px; y: 108px; width: 16px; height: 16px; d: Icons.up; tint: Theme.text-dim; }
+    Text {
+        x: 152px; y: 104px; width: 100px; height: 24px;
+        text: root.up;
+        color: Theme.text;
+        font-size: 12px;
+        vertical-alignment: center;
+    }
+
+    // pin the live numbers into the collapsed pill (game mode)
+    IconTab {
+        x: parent.width - 32px;
+        y: 102px;
+        d: Icons.pin;
+        active: root.pinned;
+        clicked => { root.pin-toggled(); }
+    }
+}

@@ -1,0 +1,428 @@
+import { D, HourItem } from "data.slint";
+
+// code: 0 sunny, 1 night, 2 partly cloudy, 3 cloudy, 4 fog, 5 rain, 6 snow, 7 storm
+export component WIcon inherits Rectangle {
+    in property <int> code: 3;
+    in property <length> size: 48px;
+    width: self.size;
+    height: self.size;
+    property <bool> has-cloud: root.code >= 2;
+    property <length> cy: root.code == 2 ? root.size * 0.10 : (root.code == 3 ? root.size * 0.0 : root.size * -0.07);
+    property <color> cloud: (root.code == 5 || root.code == 6) ? #c9d2de : (root.code == 7 ? #9aa5ba : #eef2f7);
+
+    // sun
+    if root.code == 0 : Rectangle {
+        width: root.size;
+        height: root.size;
+        Rectangle {
+            width: root.size * 0.42;
+            height: self.width;
+            x: (root.size - self.width) / 2;
+            y: (root.size - self.height) / 2;
+            border-radius: self.width / 2;
+            background: #ffc83d;
+        }
+        Path {
+            width: root.size;
+            height: root.size;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            commands: "M50 18 L50 5 M72.6 27.4 L81.8 18.2 M82 50 L95 50 M72.6 72.6 L81.8 81.8 M50 82 L50 95 M27.4 72.6 L18.2 81.8 M18 50 L5 50 M27.4 27.4 L18.2 18.2";
+            stroke: #ffc83d;
+            stroke-width: root.size * 0.045;
+            stroke-line-cap: round;
+            fill: transparent;
+        }
+    }
+
+    // moon
+    if root.code == 1 : Path {
+        width: root.size;
+        height: root.size;
+        viewbox-width: 100;
+        viewbox-height: 100;
+        commands: "M81 64 L79 67 L78 70 L75 73 L73 75 L70 78 L67 79 L64 81 L61 82 L57 83 L54 84 L50 84 L46 84 L43 83 L39 82 L36 81 L33 79 L30 78 L27 75 L25 73 L22 70 L21 67 L19 64 L18 61 L17 57 L16 54 L16 50 L16 46 L17 43 L18 39 L19 36 L21 33 L22 30 L25 27 L27 25 L30 22 L33 21 L36 19 L39 18 L43 17 L46 16 L47 17 L45 18 L42 21 L41 23 L39 26 L38 28 L36 31 L36 34 L35 37 L35 40 L35 43 L36 46 L36 49 L38 52 L39 54 L41 57 L42 59 L45 62 L47 63 L50 65 L52 66 L55 68 L58 68 L61 69 L64 69 L67 69 L70 68 L73 68 L76 66 L78 65 L81 63 Z";
+        fill: #f4e7a4;
+    }
+
+    // sun peeking behind the cloud
+    if root.code == 2 : Rectangle {
+        x: root.size * 0.50;
+        y: root.size * 0.08;
+        width: root.size * 0.38;
+        height: self.width;
+        border-radius: self.width / 2;
+        background: #ffc83d;
+    }
+
+    // cloud
+    if root.has-cloud : Rectangle {
+        width: root.size;
+        height: root.size;
+        Rectangle {
+            x: root.size * 0.10;
+            y: root.size * 0.50 + root.cy;
+            width: root.size * 0.80;
+            height: root.size * 0.28;
+            border-radius: root.size * 0.14;
+            background: root.cloud;
+        }
+        Rectangle {
+            x: root.size * 0.18;
+            y: root.size * 0.38 + root.cy;
+            width: root.size * 0.30;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: root.cloud;
+        }
+        Rectangle {
+            x: root.size * 0.36;
+            y: root.size * 0.24 + root.cy;
+            width: root.size * 0.40;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: root.cloud;
+        }
+        Rectangle {
+            x: root.size * 0.58;
+            y: root.size * 0.38 + root.cy;
+            width: root.size * 0.28;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: root.cloud;
+        }
+    }
+
+    // rain
+    if root.code == 5 : Path {
+        width: root.size;
+        height: root.size;
+        viewbox-width: 100;
+        viewbox-height: 100;
+        commands: "M32 76 L26 90 M50 76 L44 90 M68 76 L62 90";
+        stroke: #5aa9ff;
+        stroke-width: root.size * 0.05;
+        stroke-line-cap: round;
+        fill: transparent;
+    }
+
+    // snow
+    if root.code == 6 : Rectangle {
+        width: root.size;
+        height: root.size;
+        for k in 3 : Rectangle {
+            x: root.size * (0.26 + k * 0.2);
+            y: root.size * (k == 1 ? 0.86 : 0.78);
+            width: root.size * 0.09;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: #ffffff;
+        }
+    }
+
+    // fog
+    if root.code == 4 : Path {
+        width: root.size;
+        height: root.size;
+        viewbox-width: 100;
+        viewbox-height: 100;
+        commands: "M16 82 L84 82 M26 91 L74 91";
+        stroke: #d5dde8;
+        stroke-width: root.size * 0.05;
+        stroke-line-cap: round;
+        fill: transparent;
+    }
+
+    // storm
+    if root.code == 7 : Path {
+        width: root.size;
+        height: root.size;
+        viewbox-width: 100;
+        viewbox-height: 100;
+        commands: "M56 62 L40 82 L50 82 L44 98 L66 74 L55 74 L61 62 Z";
+        fill: #ffd84a;
+    }
+}
+
+component Glyph inherits Rectangle {
+    in property <string> d;
+    in property <color> tint: white;
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.d;
+        fill: transparent;
+        stroke: root.tint;
+        stroke-width: 1.8px;
+        stroke-line-cap: round;
+    }
+}
+
+component DetailRow inherits Rectangle {
+    in property <string> label;
+    in property <string> value;
+    in property <string> glyph;
+    in property <color> tile;
+    Rectangle {
+        x: 14px;
+        y: (parent.height - self.height) / 2;
+        width: 26px;
+        height: 26px;
+        border-radius: 8px;
+        background: root.tile.with-alpha(0.25);
+        Glyph {
+            x: 3px;
+            y: 3px;
+            width: 20px;
+            height: 20px;
+            d: root.glyph;
+            tint: root.tile;
+        }
+    }
+    Text {
+        x: 50px;
+        height: parent.height;
+        text: root.label;
+        font-family: D.font;
+        font-weight: 600;
+        font-size: 14px;
+        color: D.fg;
+        vertical-alignment: center;
+    }
+    Text {
+        x: parent.width - self.width - 16px;
+        width: parent.width * 0.5;
+        height: parent.height;
+        text: root.value;
+        font-family: D.font;
+        font-size: 14px;
+        color: D.fg2;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+        overflow: elide;
+    }
+}
+
+component Strip inherits Rectangle {
+    in property <[HourItem]> list;
+    in property <bool> bold-label: true;
+    for it[i] in root.list : Rectangle {
+        x: i * (root.width / root.list.length);
+        width: root.width / root.list.length;
+        height: root.height;
+        property <length> isz: Math.min(root.height * 0.42, self.width * 0.7);
+        WIcon {
+            x: (parent.width - self.width) / 2;
+            y: parent.height * 0.04;
+            code: it.code;
+            size: parent.isz;
+        }
+        Text {
+            y: parent.height * 0.54;
+            width: parent.width;
+            text: it.label;
+            font-family: D.font;
+            font-weight: root.bold-label ? 700 : 400;
+            font-size: Math.min(root.height * 0.15, 15px);
+            color: D.fg;
+            horizontal-alignment: center;
+        }
+        Text {
+            y: parent.height * 0.75;
+            width: parent.width;
+            text: it.temp;
+            font-family: D.font;
+            font-size: Math.min(root.height * 0.14, 14px);
+            color: D.fg2;
+            horizontal-alignment: center;
+        }
+    }
+}
+
+export component WeatherView inherits Rectangle {
+    property <length> gap: 10px;
+    property <length> hA: (root.height - 2 * root.gap) * 0.46;
+    property <length> hB: (root.height - 2 * root.gap) * 0.22;
+    property <length> hC: root.height - 2 * root.gap - root.hA - root.hB;
+
+    // loading / error message
+    if D.w-status != "" : Rectangle {
+        width: root.width;
+        height: root.height;
+        background: #1c1d24e6;
+        border-radius: D.radius;
+        Text {
+            width: parent.width - 30px;
+            x: 15px;
+            height: parent.height;
+            text: D.w-status;
+            wrap: word-wrap;
+            font-family: D.font;
+            font-size: 15px;
+            color: D.fg2;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+
+    // ---------- full: three cards ----------
+    if D.w-status == "" && D.w-layout == "Full" : Rectangle {
+        width: root.width;
+        height: root.height;
+
+        Rectangle {
+            y: 0px;
+            height: root.hA;
+            border-radius: 24px;
+            background: @linear-gradient(160deg, D.face1, D.face2);
+            clip: true;
+
+            Text {
+                x: parent.width * 0.07;
+                y: parent.height * 0.06;
+                text: D.w-temp;
+                font-family: D.font;
+                font-weight: 700;
+                font-size: Math.min(parent.width * 0.15, parent.height * 0.25);
+                color: #ffffff;
+            }
+            Text {
+                x: parent.width * 0.07;
+                y: parent.height * 0.33;
+                text: "Feels like: " + D.w-feels;
+                font-family: D.font;
+                font-size: Math.min(parent.width * 0.04, parent.height * 0.07);
+                color: #ffffffb8;
+            }
+            Text {
+                x: parent.width * 0.07;
+                y: parent.height * 0.42;
+                text: D.w-cond;
+                font-family: D.font;
+                font-size: Math.min(parent.width * 0.05, parent.height * 0.08);
+                color: #ffffff;
+            }
+            WIcon {
+                x: parent.width * 0.60;
+                y: parent.height * 0.04;
+                code: D.w-code;
+                size: Math.min(parent.width * 0.34, parent.height * 0.5);
+            }
+            Strip {
+                y: parent.height * 0.58;
+                width: parent.width;
+                height: parent.height * 0.4;
+                list: D.w-hours;
+            }
+        }
+
+        Rectangle {
+            y: root.hA + root.gap;
+            height: root.hB;
+            border-radius: 20px;
+            background: #ffffff12;
+            border-width: 1px;
+            border-color: #ffffff14;
+            VerticalLayout {
+                DetailRow {
+                    label: "Wind speed";
+                    value: D.w-wind;
+                    tile: #22b5a5;
+                    glyph: "M4 9 L15 9 C18 9 18 5 15 5 M4 13 L19 13 C22 13 22 17 19 17 M4 17 L11 17";
+                }
+                DetailRow {
+                    label: "Humidity";
+                    value: D.w-humidity;
+                    tile: #5b8def;
+                    glyph: "M12 4 C12 4 6 11 6 15 C6 18 9 20 12 20 C15 20 18 18 18 15 C18 11 12 4 12 4 Z";
+                }
+                DetailRow {
+                    label: "Location";
+                    value: D.w-place;
+                    tile: #e0476b;
+                    glyph: "M12 21 C12 21 5 14 5 10 C5 6 8 3 12 3 C16 3 19 6 19 10 C19 14 12 21 12 21 Z";
+                }
+            }
+        }
+
+        Rectangle {
+            y: root.hA + root.hB + 2 * root.gap;
+            height: root.hC;
+            border-radius: 20px;
+            background: #ffffff12;
+            border-width: 1px;
+            border-color: #ffffff14;
+            Strip {
+                width: parent.width;
+                height: parent.height;
+                list: D.w-days;
+                bold-label: true;
+            }
+        }
+    }
+
+    // ---------- compact: one card ----------
+    if D.w-status == "" && D.w-layout == "Compact" : Rectangle {
+        width: root.width;
+        height: root.height;
+        border-radius: D.radius;
+        background: @linear-gradient(160deg, D.face1, D.face2);
+        clip: true;
+        Text {
+            x: parent.width * 0.07;
+            y: parent.height * 0.10;
+            text: D.w-temp;
+            font-family: D.font;
+            font-weight: 700;
+            font-size: Math.min(parent.width * 0.17, parent.height * 0.34);
+            color: #ffffff;
+        }
+        Text {
+            x: parent.width * 0.07;
+            y: parent.height * 0.52;
+            text: D.w-cond;
+            font-family: D.font;
+            font-size: Math.min(parent.width * 0.06, parent.height * 0.11);
+            color: #ffffff;
+        }
+        Text {
+            x: parent.width * 0.07;
+            y: parent.height * 0.68;
+            text: D.w-place + "   " + D.w-hilo;
+            font-family: D.font;
+            font-size: Math.min(parent.width * 0.045, parent.height * 0.085);
+            color: #ffffffb8;
+        }
+        WIcon {
+            x: parent.width * 0.58;
+            y: parent.height * 0.08;
+            code: D.w-code;
+            size: Math.min(parent.width * 0.36, parent.height * 0.7);
+        }
+    }
+
+    // ---------- minimal: icon and temperature ----------
+    if D.w-status == "" && D.w-layout == "Minimal" : Rectangle {
+        width: root.width;
+        height: root.height;
+        WIcon {
+            x: root.width * 0.08;
+            y: (root.height - self.height) / 2;
+            code: D.w-code;
+            size: Math.min(root.width * 0.4, root.height * 0.8);
+        }
+        Text {
+            x: root.width * 0.08 + Math.min(root.width * 0.4, root.height * 0.8) + root.width * 0.04;
+            y: 0px;
+            height: root.height;
+            text: D.w-temp;
+            font-family: D.font;
+            font-weight: 700;
+            font-size: Math.min(root.width * 0.2, root.height * 0.45);
+            color: D.fg;
+            vertical-alignment: center;
+        }
+    }
+}

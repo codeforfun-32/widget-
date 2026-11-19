@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["Dynamic_Island", "settings_app", "shared", "taskbar_app", "widgets_app"]
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 16

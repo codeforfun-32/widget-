@@ -1,0 +1,71 @@
+import { Theme } from "../styles/themes.slint";
+
+export component MascotView inherits Rectangle {
+    in property <float> look-x;
+    in property <float> look-y;
+    // 0 = idle, 1 = happy, 2 = dizzy
+    in property <int> mood;
+    in property <bool> blinking;
+    callback poked();
+
+    property <bool> wobble: false;
+
+    border-radius: self.width * 0.34;
+    background: Theme.mascot;
+
+    Timer {
+        interval: 90ms;
+        running: root.mood == 2;
+        triggered => { root.wobble = !root.wobble; }
+    }
+
+    face := Rectangle {
+        x: root.mood == 2 ? (root.wobble ? root.width * 0.06 : -root.width * 0.06) : 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        animate x { duration: 90ms; }
+
+        // eyes
+        for side in [0, 1] : Rectangle {
+            width: root.width * 0.16;
+            height: (root.blinking || root.mood == 1) ? root.width * 0.05 : root.width * 0.2;
+            x: root.width * (0.25 + side * 0.35) + root.look-x * root.width * 0.07;
+            y: root.height * 0.36 + root.look-y * root.width * 0.05 - self.height / 2;
+            border-radius: self.width / 2;
+            background: root.mood == 2 ? transparent : Theme.mascot-ink;
+            border-width: root.mood == 2 ? root.width * 0.03 : 0px;
+            border-color: Theme.mascot-ink;
+            animate height { duration: 90ms; }
+        }
+
+        // cheeks (only when happy)
+        for side in [0, 1] : Rectangle {
+            width: root.width * 0.14;
+            height: root.width * 0.09;
+            x: root.width * (0.08 + side * 0.64);
+            y: root.height * 0.6;
+            border-radius: self.height / 2;
+            background: #ff7aa2;
+            opacity: root.mood == 1 ? 0.6 : 0;
+            animate opacity { duration: 150ms; }
+        }
+
+        // mouth
+        Rectangle {
+            width: root.mood == 1 ? root.width * 0.26 : (root.mood == 2 ? root.width * 0.14 : root.width * 0.16);
+            height: root.mood == 1 ? root.width * 0.12 : (root.mood == 2 ? root.width * 0.14 : root.width * 0.05);
+            x: (root.width - self.width) / 2 + root.look-x * root.width * 0.04;
+            y: root.height * 0.62 + root.look-y * root.width * 0.03;
+            border-radius: self.height / 2;
+            background: Theme.mascot-ink;
+            animate width { duration: 120ms; }
+            animate height { duration: 120ms; }
+        }
+    }
+
+    TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.poked(); }
+    }
+}

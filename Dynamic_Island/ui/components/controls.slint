@@ -1,0 +1,157 @@
+import { Theme } from "../styles/themes.slint";
+
+// Draws one SVG path icon.
+export component Icon inherits Rectangle {
+    in property <string> d: "";
+    in property <color> tint: Theme.text;
+    width: 18px;
+    height: 18px;
+
+    Path {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        viewbox-x: 0;
+        viewbox-y: 0;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.d;
+        stroke: root.tint;
+        stroke-width: 1.7px;
+        stroke-line-cap: round;
+        fill: transparent;
+    }
+}
+
+// Round icon button used for the tab row.
+export component IconTab inherits Rectangle {
+    in property <string> d: "";
+    in property <bool> active: false;
+    in property <int> badge: 0;
+    callback clicked();
+
+    width: 32px;
+    height: 28px;
+    border-radius: 14px;
+    background: root.active ? Theme.chip-active : (ta.has-hover ? Theme.chip : transparent);
+    animate background { duration: 160ms; }
+
+    Icon {
+        x: (parent.width - 18px) / 2;
+        y: (parent.height - 18px) / 2;
+        width: 18px;
+        height: 18px;
+        d: root.d;
+        tint: root.active ? Theme.text : Theme.text-dim;
+    }
+
+    if root.badge > 0 : Rectangle {
+        x: parent.width - 11px;
+        y: 1px;
+        width: 9px;
+        height: 9px;
+        border-radius: 4.5px;
+        background: Theme.accent;
+    }
+
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+// A page that fades and slides in smoothly when it becomes active.
+export component Page inherits Rectangle {
+    in property <bool> active: false;
+    in property <length> base-y: 50px;
+
+    y: root.active ? root.base-y : root.base-y + 10px;
+    opacity: root.active ? 1 : 0;
+    visible: self.opacity > 0.01;
+    animate y { duration: 260ms; easing: ease-out; }
+    animate opacity { duration: 200ms; }
+}
+
+export component Chip inherits Rectangle {
+    in property <string> text;
+    in property <bool> active: false;
+    callback clicked();
+
+    width: 64px;
+    height: 26px;
+    border-radius: 13px;
+    background: (ta.pressed || root.active) ? Theme.chip-active : (ta.has-hover ? Theme.chip-active : Theme.chip);
+    animate background { duration: 120ms; }
+
+    Text {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        color: Theme.text;
+        font-size: 12px;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+export component IconButton inherits Rectangle {
+    // 0 = previous, 1 = play, 2 = pause, 3 = next
+    in property <int> kind: 1;
+    callback clicked();
+
+    width: 36px;
+    height: 36px;
+    border-radius: 18px;
+    background: ta.pressed ? Theme.chip-active : (ta.has-hover ? Theme.chip-active : Theme.chip);
+    animate background { duration: 120ms; }
+
+    if root.kind == 0 : Rectangle {
+        x: 11px; y: 11px; width: 2px; height: 14px;
+        background: Theme.text;
+    }
+    if root.kind == 0 : Path {
+        x: 14px; y: 11px; width: 12px; height: 14px;
+        viewbox-width: 12; viewbox-height: 14;
+        commands: "M 12 0 L 0 7 L 12 14 Z";
+        fill: Theme.text;
+    }
+    if root.kind == 1 : Path {
+        x: 14px; y: 11px; width: 12px; height: 14px;
+        viewbox-width: 12; viewbox-height: 14;
+        commands: "M 0 0 L 12 7 L 0 14 Z";
+        fill: Theme.text;
+    }
+    if root.kind == 2 : Rectangle {
+        x: 12px; y: 11px; width: 4px; height: 14px;
+        border-radius: 1px;
+        background: Theme.text;
+    }
+    if root.kind == 2 : Rectangle {
+        x: 20px; y: 11px; width: 4px; height: 14px;
+        border-radius: 1px;
+        background: Theme.text;
+    }
+    if root.kind == 3 : Path {
+        x: 10px; y: 11px; width: 12px; height: 14px;
+        viewbox-width: 12; viewbox-height: 14;
+        commands: "M 0 0 L 12 7 L 0 14 Z";
+        fill: Theme.text;
+    }
+    if root.kind == 3 : Rectangle {
+        x: 23px; y: 11px; width: 2px; height: 14px;
+        background: Theme.text;
+    }
+
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}

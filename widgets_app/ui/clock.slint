@@ -1,0 +1,410 @@
+import { D } from "data.slint";
+
+component Saturday inherits Rectangle {
+    VerticalLayout {
+        alignment: center;
+        spacing: root.height * 0.05;
+        Text {
+            text: D.day;
+            font-family: D.font;
+            font-weight: 300;
+            color: D.fg;
+            font-size: Math.min(root.width * 0.092, root.height * 0.28);
+            letter-spacing: self.font-size * 0.42;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: D.date;
+            font-family: D.font;
+            color: D.fg2;
+            font-size: Math.min(root.width * 0.04, root.height * 0.1);
+            letter-spacing: self.font-size * 0.15;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: "- " + D.time + (D.ampm != "" ? " " + D.ampm : "") + " -";
+            font-family: D.font;
+            color: D.fg2;
+            font-size: Math.min(root.width * 0.04, root.height * 0.1);
+            letter-spacing: self.font-size * 0.15;
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component Bold inherits Rectangle {
+    property <length> fs: Math.min(root.width * 0.92 / (D.time-chars * 0.56), root.height * 0.6);
+    VerticalLayout {
+        alignment: center;
+        spacing: root.height * 0.01;
+        Text {
+            text: D.time;
+            font-family: D.font;
+            font-weight: 800;
+            color: D.fg;
+            font-size: root.fs;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: (D.ampm != "" ? D.ampm + "  ·  " : "") + D.day + ", " + D.date;
+            font-family: D.font;
+            color: D.fg2;
+            font-size: Math.min(root.width * 0.055, root.height * 0.1);
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component Stack inherits Rectangle {
+    Text {
+        y: root.height * 0.02;
+        width: root.width;
+        height: root.height * 0.48;
+        text: D.hh;
+        font-family: D.font;
+        font-weight: 800;
+        color: D.fg;
+        font-size: Math.min(root.height * 0.46, root.width * 0.8);
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    Text {
+        y: root.height * 0.5;
+        width: root.width;
+        height: root.height * 0.48;
+        text: D.mm;
+        font-family: D.font;
+        font-weight: 800;
+        color: D.accent;
+        font-size: Math.min(root.height * 0.46, root.width * 0.8);
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+component Neon inherits Rectangle {
+    property <length> fs: Math.min(root.width * 0.92 / (D.time-chars * 0.56), root.height * 0.55);
+    // soft glow: the same text a few pixels around, faint
+    for k in 4 : Text {
+        x: k == 0 ? -3px : (k == 1 ? 3px : 0px);
+        y: k == 2 ? -3px : (k == 3 ? 3px : 0px);
+        width: root.width;
+        height: root.height;
+        text: D.time;
+        font-family: D.font;
+        font-weight: 700;
+        color: D.accent.with-alpha(0.28);
+        font-size: root.fs;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    Text {
+        width: root.width;
+        height: root.height;
+        text: D.time;
+        font-family: D.font;
+        font-weight: 700;
+        color: D.accent;
+        font-size: root.fs;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+component Retro inherits Rectangle {
+    property <length> fs: Math.min(root.width * 0.92 / (D.time-chars * 0.6), root.height * 0.6);
+    Text {
+        width: root.width;
+        height: root.height;
+        text: D.time-chars > 5 ? "88:88:88" : "88:88";
+        font-family: "Consolas";
+        font-weight: 700;
+        color: D.accent.with-alpha(0.1);
+        font-size: root.fs;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    Text {
+        width: root.width;
+        height: root.height;
+        text: D.time;
+        font-family: "Consolas";
+        font-weight: 700;
+        color: D.accent;
+        font-size: root.fs;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+component Gothic inherits Rectangle {
+    VerticalLayout {
+        alignment: center;
+        spacing: root.height * 0.03;
+        Text {
+            text: D.day;
+            font-family: D.font;
+            color: D.accent;
+            font-size: Math.min(root.width * 0.06, root.height * 0.1);
+            letter-spacing: self.font-size * 0.5;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: D.time + (D.ampm != "" ? " " + D.ampm : "");
+            font-family: D.font;
+            font-italic: true;
+            color: D.fg;
+            font-size: Math.min(root.width * 0.9 / (D.time-chars * 0.56), root.height * 0.4);
+            horizontal-alignment: center;
+        }
+        HorizontalLayout {
+            alignment: center;
+            Rectangle {
+                width: root.width * 0.42;
+                height: 1px;
+                background: D.accent.with-alpha(0.7);
+            }
+        }
+        Text {
+            text: D.date;
+            font-family: D.font;
+            font-italic: true;
+            color: D.fg2;
+            font-size: Math.min(root.width * 0.05, root.height * 0.1);
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component Minimal inherits Rectangle {
+    VerticalLayout {
+        alignment: center;
+        spacing: root.height * 0.04;
+        Text {
+            text: D.time + (D.ampm != "" ? " " + D.ampm : "");
+            font-family: D.font;
+            font-weight: 200;
+            color: D.fg;
+            font-size: Math.min(root.width * 0.9 / (D.time-chars * 0.56), root.height * 0.5);
+            horizontal-alignment: center;
+        }
+        HorizontalLayout {
+            alignment: center;
+            Rectangle {
+                width: root.width * 0.12;
+                height: 2px;
+                border-radius: 1px;
+                background: D.accent;
+            }
+        }
+        Text {
+            text: D.day + ", " + D.date;
+            font-family: D.font;
+            color: D.fg2;
+            font-size: Math.min(root.width * 0.05, root.height * 0.1);
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component Words inherits Rectangle {
+    VerticalLayout {
+        alignment: center;
+        padding: root.width * 0.06;
+        spacing: root.height * 0.04;
+        Text {
+            text: "it's";
+            font-family: D.font;
+            color: D.accent;
+            font-size: Math.min(root.width * 0.06, root.height * 0.1);
+            letter-spacing: self.font-size * 0.3;
+            horizontal-alignment: center;
+        }
+        Text {
+            text: D.word-time;
+            font-family: D.font;
+            font-weight: 300;
+            wrap: word-wrap;
+            color: D.fg;
+            font-size: Math.min(root.width * 0.095, root.height * 0.2);
+            horizontal-alignment: center;
+        }
+    }
+}
+
+component DateTile inherits Rectangle {
+    VerticalLayout {
+        Rectangle {
+            height: root.height * 0.26;
+            background: D.accent;
+            Text {
+                width: parent.width;
+                height: parent.height;
+                text: D.month-name;
+                font-family: D.font;
+                font-weight: 700;
+                color: #101114;
+                font-size: parent.height * 0.42;
+                letter-spacing: self.font-size * 0.2;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+        Text {
+            text: D.day-num;
+            font-family: D.font;
+            font-weight: 800;
+            color: D.fg;
+            font-size: Math.min(root.height * 0.46, root.width * 0.5);
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        Text {
+            height: root.height * 0.17;
+            text: D.day;
+            font-family: D.font;
+            color: D.fg2;
+            font-size: root.height * 0.09;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}
+
+component FlipCard inherits Rectangle {
+    in property <string> label;
+    in property <length> size: 80px;
+    width: self.size * 0.82;
+    height: self.size;
+    border-radius: self.size * 0.1;
+    background: #1b1d24;
+    border-width: 1px;
+    border-color: #ffffff1c;
+    Text {
+        width: parent.width;
+        height: parent.height;
+        text: root.label;
+        font-family: D.font;
+        font-weight: 800;
+        color: D.fg;
+        font-size: root.size * 0.62;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    Rectangle {
+        y: parent.height / 2 - 1px;
+        width: parent.width;
+        height: 2px;
+        background: #000000a0;
+    }
+}
+
+component Flip inherits Rectangle {
+    HorizontalLayout {
+        alignment: center;
+        spacing: root.width * 0.03;
+        padding-top: root.height * 0.1;
+        padding-bottom: root.height * 0.1;
+        FlipCard {
+            label: D.hh;
+            size: Math.min(root.width * 0.42, root.height * 0.8);
+        }
+        FlipCard {
+            label: D.mm;
+            size: Math.min(root.width * 0.42, root.height * 0.8);
+        }
+    }
+}
+
+component Analog inherits Rectangle {
+    property <length> s: Math.min(root.width, root.height) * 0.94;
+    Rectangle {
+        width: root.s;
+        height: root.s;
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        border-radius: self.width / 2;
+        background: #00000050;
+        border-width: 2px;
+        border-color: D.fg2;
+
+        Path {
+            width: parent.width;
+            height: parent.height;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            commands: D.ticks;
+            stroke: D.fg2;
+            stroke-width: 1.4px;
+            fill: transparent;
+        }
+        for n[i] in D.numerals : Text {
+            x: n.x * parent.width - 16px;
+            y: n.y * parent.height - 12px;
+            width: 32px;
+            height: 24px;
+            text: n.text;
+            font-family: D.font;
+            font-size: parent.width * 0.07;
+            color: D.fg;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        Path {
+            width: parent.width;
+            height: parent.height;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            commands: D.hand-h;
+            stroke: D.fg;
+            stroke-width: 4px;
+            stroke-line-cap: round;
+            fill: transparent;
+        }
+        Path {
+            width: parent.width;
+            height: parent.height;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            commands: D.hand-m;
+            stroke: D.fg;
+            stroke-width: 2.6px;
+            stroke-line-cap: round;
+            fill: transparent;
+        }
+        Path {
+            visible: D.show-seconds;
+            width: parent.width;
+            height: parent.height;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            commands: D.hand-s;
+            stroke: D.accent;
+            stroke-width: 1.4px;
+            stroke-line-cap: round;
+            fill: transparent;
+        }
+        Rectangle {
+            width: 10px;
+            height: 10px;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            border-radius: 5px;
+            background: D.accent;
+        }
+    }
+}
+
+export component ClockFace inherits Rectangle {
+    if D.style == "Saturday" : Saturday { width: root.width; height: root.height; }
+    if D.style == "Bold" : Bold { width: root.width; height: root.height; }
+    if D.style == "Stack" : Stack { width: root.width; height: root.height; }
+    if D.style == "Neon" : Neon { width: root.width; height: root.height; }
+    if D.style == "Retro" : Retro { width: root.width; height: root.height; }
+    if D.style == "Gothic" : Gothic { width: root.width; height: root.height; }
+    if D.style == "Minimal" : Minimal { width: root.width; height: root.height; }
+    if D.style == "Words" : Words { width: root.width; height: root.height; }
+    if D.style == "Date tile" : DateTile { width: root.width; height: root.height; }
+    if D.style == "Flip" : Flip { width: root.width; height: root.height; }
+    if D.style == "Analog" || D.style == "Analog Roman" || D.style == "Analog Minimal" : Analog { width: root.width; height: root.height; }
+}

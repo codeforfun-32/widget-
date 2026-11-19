@@ -1,0 +1,48 @@
+import { Theme } from "../styles/theme.slint";
+
+export component Preview inherits Rectangle {
+    in property <color> accent;
+    in property <length> radius;
+    in property <length> pill-width;
+
+    height: 92px;
+    background: Theme.panel;
+    border-radius: 12px;
+
+    Rectangle {
+        width: root.pill-width;
+        height: 34px;
+        y: 16px;
+        x: (parent.width - self.width) / 2;
+        background: #000000;
+        border-radius: root.radius;
+        animate width { duration: 200ms; easing: ease-out; }
+        animate border-radius { duration: 200ms; }
+
+        Rectangle {
+            x: 14px;
+            y: 11px;
+            width: 12px;
+            height: 12px;
+            border-radius: 6px;
+            background: root.accent;
+        }
+        Rectangle {
+            x: 36px;
+            y: 15px;
+            width: parent.width - 36px - 18px;
+            height: 4px;
+            border-radius: 2px;
+            background: root.accent;
+            opacity: 0.55;
+        }
+    }
+    Text {
+        y: 62px;
+        width: parent.width;
+        horizontal-alignment: center;
+        text: "Live preview";
+        color: Theme.muted;
+        font-size: 12px;
+    }
+}

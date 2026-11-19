@@ -1,0 +1,145 @@
+import { Theme } from "../styles/themes.slint";
+import { Icons } from "../styles/icons.slint";
+import { Icon } from "controls.slint";
+
+export struct SiteItem {
+    name: string,
+    url: string,
+    letter: string,
+    icon: image,
+    has-icon: bool,
+}
+
+export component SiteGrid inherits Rectangle {
+    in property <[SiteItem]> sites;
+    callback opened(int);
+    callback removed(int);
+    callback add-requested();
+
+    for s[i] in root.sites : Rectangle {
+        x: Math.mod(i, 5) * 67px;
+        y: Math.floor(i / 5) * 64px;
+        width: 48px;
+        height: 62px;
+
+        box := Rectangle {
+            x: 0px;
+            y: 0px;
+            width: 48px;
+            height: 48px;
+            border-radius: 15px;
+            background: ta.has-hover ? Theme.chip-active : Theme.chip;
+            animate background { duration: 140ms; }
+
+            if s.has-icon : Image {
+                x: 11px;
+                y: 11px;
+                width: 26px;
+                height: 26px;
+                source: s.icon;
+                image-fit: contain;
+            }
+            if !s.has-icon : Text {
+                x: 0px;
+                y: 0px;
+                width: parent.width;
+                height: parent.height;
+                text: s.letter;
+                color: Theme.text;
+                font-size: 20px;
+                font-weight: 700;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+
+            ta := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.opened(i); }
+            }
+        }
+
+        Text {
+            x: -6px;
+            y: 50px;
+            width: 60px;
+            height: 12px;
+            text: s.name;
+            color: Theme.text-dim;
+            font-size: 10px;
+            overflow: elide;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+
+        // remove button: sits inside the tile, shows on hover
+        Rectangle {
+            x: 28px;
+            y: 3px;
+            width: 18px;
+            height: 18px;
+            border-radius: 9px;
+            background: del.has-hover ? #ff5a5a : Theme.danger;
+            opacity: (ta.has-hover || del.has-hover) ? 1 : 0;
+            visible: self.opacity > 0.01;
+            animate opacity { duration: 120ms; }
+            animate background { duration: 100ms; }
+
+            Icon {
+                x: 5px;
+                y: 5px;
+                width: 8px;
+                height: 8px;
+                d: Icons.close;
+                tint: #ffffff;
+            }
+            del := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.removed(i); }
+            }
+        }
+    }
+
+    // "add from clipboard" tile
+    if root.sites.length < 10 : Rectangle {
+        x: Math.mod(root.sites.length, 5) * 67px;
+        y: Math.floor(root.sites.length / 5) * 64px;
+        width: 48px;
+        height: 62px;
+
+        Rectangle {
+            x: 0px;
+            y: 0px;
+            width: 48px;
+            height: 48px;
+            border-radius: 15px;
+            background: addta.has-hover ? Theme.chip-active : Theme.chip;
+            border-width: 1px;
+            border-color: Theme.border;
+            animate background { duration: 140ms; }
+
+            Icon {
+                x: 14px;
+                y: 14px;
+                width: 20px;
+                height: 20px;
+                d: Icons.plus;
+                tint: Theme.accent;
+            }
+            addta := TouchArea {
+                mouse-cursor: pointer;
+                clicked => { root.add-requested(); }
+            }
+        }
+        Text {
+            x: -6px;
+            y: 50px;
+            width: 60px;
+            height: 12px;
+            text: "Paste link";
+            color: Theme.text-dim;
+            font-size: 10px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}

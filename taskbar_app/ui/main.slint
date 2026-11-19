@@ -1,0 +1,377 @@
+export struct AppItem {
+    name: string,
+    letter: string,
+    icon: image,
+    has-icon: bool,
+    running: bool,
+    active: bool,
+    count: int,
+}
+
+component Glyph inherits Rectangle {
+    in property <string> d;
+    in property <color> tint: white;
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.d;
+        fill: transparent;
+        stroke: root.tint;
+        stroke-width: 1.6px;
+        stroke-line-cap: round;
+    }
+}
+
+component IconButton inherits Rectangle {
+    in property <string> d;
+    in property <color> tint: white;
+    in property <color> hl: #ffffff1f;
+    callback clicked();
+
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    background: ta.has-hover ? root.hl : transparent;
+    animate background { duration: 120ms; }
+
+    Glyph {
+        width: 18px;
+        height: 18px;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2;
+        d: root.d;
+        tint: root.tint;
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+export component TaskbarWindow inherits Window {
+    no-frame: true;
+    always-on-top: true;
+    background: transparent;
+    title: "Taskbar";
+    preferred-width: 1600px;
+    preferred-height: 260px;
+
+    in property <[AppItem]> apps;
+    in property <length> icon-size: 30px;
+    in property <length> radius: 16px;
+    in property <bool> notch: false;
+    in property <color> bg: #0a0a0d;
+    in property <color> edge: #ffffff22;
+    in property <color> fg: white;
+    in property <color> accent: #7cf0c9;
+    in property <string> hover-mode: "lift";   // none, highlight, lift
+    in property <float> speed: 1.0;
+    in property <string> indicator: "Dot";
+    in property <length> margin: 10px;
+    in property <bool> hidden: false;
+    in property <bool> show-start: true;
+    in property <bool> show-arrow: true;
+    in property <bool> show-tray: true;
+    in property <bool> show-bell: true;
+    in property <bool> show-clock: true;
+    in property <bool> show-date: true;
+    in property <bool> tooltips: true;
+    in property <bool> bounce: true;
+    in property <bool> overflow-open: false;
+    in property <string> time-text;
+    in property <string> date-text;
+    in-out property <int> hover-idx: -1;
+    in-out property <int> bounce-idx: -1;
+
+    callback app-clicked(int);
+    callback app-context(int);
+    callback app-middle(int);
+    callback tray(string);
+
+    // ---- layout numbers ----
+    property <length> pad: 8px;
+    property <length> slot: root.icon-size + 10px;
+    property <length> sep: 14px;
+    property <length> apps-x: root.pad + (root.show-start ? root.slot + root.sep : 0px);
+    property <length> tail-x: root.apps-x + root.apps.length * root.slot + (root.apps.length > 0 ? root.sep : 0px);
+    property <length> arrow-w: root.show-arrow ? 26px : 0px;
+    property <length> tray-w: root.show-tray ? 102px : 0px;
+    property <length> clock-w: root.show-clock ? (root.show-date ? 92px : 76px) : 0px;
+    property <length> bell-w: root.show-bell ? 34px : 0px;
+    property <length> dock-target: root.tail-x + root.arrow-w + root.tray-w + root.clock-w + root.bell-w + root.pad;
+    property <length> dw: root.dock-target;
+    animate dw { duration: 200ms / root.speed; easing: ease-out; }
+    property <length> tray-x: root.tail-x + root.arrow-w;
+
+    // room above the bar the mouse needs (Rust uses this for the click region)
+    out property <length> head: root.hover-idx >= 0 ? 52px : 0px;
+    out property <length> dock-x: dock.x;
+    out property <length> dock-y: dock.y;
+    out property <length> dock-w: dock.width;
+    out property <length> dock-h: dock.height;
+
+    dock := Rectangle {
+        width: Math.max(root.dw, 80px);
+        height: root.icon-size + 2 * root.pad;
+        x: (root.width - self.width) / 2;
+        y: root.hidden ? root.height + 6px : root.height - self.height - root.margin;
+        background: root.bg;
+        // Notch style: square bottom corners so the bar sits flush with the screen edge
+        border-top-left-radius: Math.min(root.radius, self.height / 2);
+        border-top-right-radius: Math.min(root.radius, self.height / 2);
+        border-bottom-left-radius: root.notch ? 0px : Math.min(root.radius, self.height / 2);
+        border-bottom-right-radius: root.notch ? 0px : Math.min(root.radius, self.height / 2);
+        border-width: 1px;
+        border-color: root.edge;
+        animate y { duration: 240ms / root.speed; easing: ease-in-out; }
+
+        // ---------- start button ----------
+        Rectangle {
+            visible: root.show-start;
+            x: root.pad;
+            y: 0px;
+            width: root.slot;
+            height: parent.height;
+
+            Rectangle {
+                x: 3px;
+                y: 4px;
+                width: parent.width - 6px;
+                height: parent.height - 8px;
+                border-radius: 10px;
+                background: st-ta.has-hover ? root.fg.with-alpha(0.12) : transparent;
+                animate background { duration: 120ms; }
+            }
+            Rectangle {
+                width: root.icon-size * 0.62;
+                height: self.width;
+                x: (parent.width - self.width) / 2;
+                y: (parent.height - self.height) / 2;
+
+                for k in 4 : Rectangle {
+                    property <length> g: parent.width * 0.46;
+                    property <length> gap: parent.width * 0.08;
+                    width: self.g;
+                    height: self.g;
+                    x: (parent.width - (2 * self.g + self.gap)) / 2 + Math.mod(k, 2) * (self.g + self.gap);
+                    y: (parent.height - (2 * self.g + self.gap)) / 2 + Math.floor(k / 2) * (self.g + self.gap);
+                    background: root.fg;
+                    border-radius: 1px;
+                }
+            }
+            st-ta := TouchArea {
+                clicked => { root.tray("start"); }
+            }
+        }
+
+        // ---------- separators ----------
+        Rectangle {
+            visible: root.show-start && root.apps.length > 0;
+            x: root.apps-x - root.sep / 2;
+            y: (parent.height - self.height) / 2;
+            width: 1px;
+            height: root.icon-size * 0.6;
+            background: root.fg.with-alpha(0.2);
+        }
+        Rectangle {
+            visible: root.apps.length > 0;
+            x: root.tail-x - root.sep / 2;
+            y: (parent.height - self.height) / 2;
+            width: 1px;
+            height: root.icon-size * 0.6;
+            background: root.fg.with-alpha(0.2);
+        }
+
+        // ---------- apps ----------
+        for app[i] in root.apps : Rectangle {
+            x: root.apps-x + i * root.slot;
+            y: 0px;
+            width: root.slot;
+            height: dock.height;
+            property <bool> hov: root.hover-idx == i;
+            property <length> bo: root.bounce && root.bounce-idx == i
+                ? -Math.abs(Math.sin(animation-tick() / 130ms * 1rad)) * 14px : 0px;
+
+            // highlight
+            Rectangle {
+                x: 3px;
+                y: 4px;
+                width: parent.width - 6px;
+                height: parent.height - 8px;
+                border-radius: 10px;
+                background: parent.hov && root.hover-mode != "none" ? root.fg.with-alpha(0.14)
+                    : (app.active ? root.fg.with-alpha(0.08) : transparent);
+                animate background { duration: 120ms; }
+            }
+
+            // icon
+            Rectangle {
+                width: root.icon-size;
+                height: self.width;
+                x: (parent.width - self.width) / 2;
+                y: parent.height - root.pad - self.height
+                    - (parent.hov && root.hover-mode == "lift" ? 7px : 0px) + parent.bo;
+                animate y { duration: 140ms / root.speed; easing: ease-out; }
+                // rounded corners for every icon
+                clip: true;
+                border-radius: self.width * 0.26;
+
+                if !app.has-icon : Rectangle {
+                    background: root.fg.with-alpha(0.15);
+                    border-radius: parent.width * 0.23;
+                    Text {
+                        text: app.letter;
+                        color: root.fg;
+                        font-size: parent.width * 0.5;
+                        font-weight: 700;
+                        horizontal-alignment: center;
+                        vertical-alignment: center;
+                    }
+                }
+                if app.has-icon : Image {
+                    source: app.icon;
+                    width: parent.width;
+                    height: parent.height;
+                    image-fit: contain;
+                }
+            }
+
+            // running indicator
+            if root.indicator != "None" && app.running : Rectangle {
+                width: app.active ? (root.indicator == "Line" ? 18px : 14px) : (root.indicator == "Line" ? 9px : 5px);
+                height: root.indicator == "Line" ? 2px : 4px;
+                x: (parent.width - self.width) / 2;
+                y: parent.height - self.height - 2px;
+                border-radius: self.height / 2;
+                background: app.active ? root.accent : root.fg.with-alpha(0.55);
+                animate width { duration: 140ms; }
+            }
+
+            TouchArea {
+                y: -root.head;
+                height: parent.height + root.head;
+                changed has-hover => {
+                    if (self.has-hover) {
+                        root.hover-idx = i;
+                    } else if (root.hover-idx == i) {
+                        root.hover-idx = -1;
+                    }
+                }
+                pointer-event(e) => {
+                    if (e.kind == PointerEventKind.up) {
+                        if (e.button == PointerEventButton.left) {
+                            root.app-clicked(i);
+                        } else if (e.button == PointerEventButton.right) {
+                            root.app-context(i);
+                        } else if (e.button == PointerEventButton.middle) {
+                            root.app-middle(i);
+                        }
+                    }
+                }
+            }
+        }
+
+        // ---------- name tooltip ----------
+        if root.tooltips && root.hover-idx >= 0 && root.hover-idx < root.apps.length : Rectangle {
+            width: tip-text.preferred-width + 22px;
+            height: 28px;
+            x: root.apps-x + root.hover-idx * root.slot + root.slot / 2 - self.width / 2;
+            y: -40px;
+            background: #1b1d22f2;
+            border-radius: 8px;
+            border-width: 1px;
+            border-color: #ffffff22;
+            animate x { duration: 110ms; easing: ease-out; }
+            tip-text := Text {
+                x: 11px;
+                height: parent.height;
+                text: root.apps[root.hover-idx].name;
+                color: white;
+                font-size: 12px;
+                vertical-alignment: center;
+            }
+        }
+
+        // ---------- hidden icons arrow (opens Windows' own box) ----------
+        IconButton {
+            visible: root.show-arrow;
+            x: root.tail-x;
+            y: (parent.height - self.height) / 2;
+            width: 26px;
+            d: root.overflow-open ? "M5 9 L12 16 L19 9" : "M5 15 L12 8 L19 15";
+            tint: root.fg;
+            hl: root.fg.with-alpha(0.12);
+            clicked => { root.tray("overflow"); }
+        }
+
+        // ---------- system icons (open quick settings) ----------
+        IconButton {
+            visible: root.show-tray;
+            x: root.tray-x;
+            y: (parent.height - self.height) / 2;
+            d: "M2 9 C8 3.5 16 3.5 22 9 M5.5 12.8 C9.5 9.2 14.5 9.2 18.5 12.8 M9 16.4 C10.8 14.8 13.2 14.8 15 16.4 M12 20 L12 20.1";
+            tint: root.fg;
+            hl: root.fg.with-alpha(0.12);
+            clicked => { root.tray("quick"); }
+        }
+        IconButton {
+            visible: root.show-tray;
+            x: root.tray-x + 34px;
+            y: (parent.height - self.height) / 2;
+            d: "M4 9.5 L8 9.5 L13 5.5 L13 18.5 L8 14.5 L4 14.5 Z M16.5 9 C18 10.5 18 13.5 16.5 15 M19.5 6.5 C22.5 9.5 22.5 14.5 19.5 17.5";
+            tint: root.fg;
+            hl: root.fg.with-alpha(0.12);
+            clicked => { root.tray("quick"); }
+        }
+        IconButton {
+            visible: root.show-tray;
+            x: root.tray-x + 68px;
+            y: (parent.height - self.height) / 2;
+            d: "M3 8 L18 8 L18 16 L3 16 Z M20.5 10.5 L20.5 13.5";
+            tint: root.fg;
+            hl: root.fg.with-alpha(0.12);
+            clicked => { root.tray("quick"); }
+        }
+
+        // ---------- clock ----------
+        Rectangle {
+            visible: root.show-clock;
+            x: root.tray-x + root.tray-w;
+            y: 0px;
+            width: root.clock-w;
+            height: parent.height;
+            VerticalLayout {
+                alignment: center;
+                spacing: 0px;
+                Text {
+                    text: root.time-text;
+                    color: root.fg;
+                    font-size: 13px;
+                    font-weight: 700;
+                    horizontal-alignment: center;
+                }
+                if root.show-date : Text {
+                    text: root.date-text;
+                    color: root.fg.with-alpha(0.7);
+                    font-size: 11px;
+                    horizontal-alignment: center;
+                }
+            }
+            TouchArea {
+                clicked => { root.tray("clock"); }
+            }
+        }
+
+        // ---------- notification bell ----------
+        IconButton {
+            visible: root.show-bell;
+            x: root.tray-x + root.tray-w + root.clock-w + 2px;
+            y: (parent.height - self.height) / 2;
+            d: "M6 16.5 L6 11 C6 7.7 8.7 5 12 5 C15.3 5 18 7.7 18 11 L18 16.5 L20 18.5 L4 18.5 Z M10 21 L14 21";
+            tint: root.fg;
+            hl: root.fg.with-alpha(0.12);
+            clicked => { root.tray("bell"); }
+        }
+    }
+}

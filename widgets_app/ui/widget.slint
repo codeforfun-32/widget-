@@ -1,0 +1,142 @@
+import { D, TaskItem, LinkItem, CalCell, HourItem, ZoneRow, Numeral } from "data.slint";
+import { ClockFace } from "clock.slint";
+import { WeatherView } from "weather.slint";
+import { NoteView, TodoView } from "notes.slint";
+import { LinksView } from "links.slint";
+import { MediaView, MusicView, CalendarView, WorldView } from "extra.slint";
+
+export { D, TaskItem, LinkItem, CalCell, HourItem, ZoneRow, Numeral }
+
+component Glyph inherits Rectangle {
+    in property <string> d;
+    in property <color> tint: white;
+    Path {
+        width: parent.width;
+        height: parent.height;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.d;
+        fill: transparent;
+        stroke: root.tint;
+        stroke-width: 2px;
+        stroke-line-cap: round;
+    }
+}
+
+export component WidgetWindow inherits Window {
+    no-frame: true;
+    background: transparent;
+    title: "Dynamic Island Widget";
+    preferred-width: 320px;
+    preferred-height: 200px;
+    default-font-family: "Segoe UI";
+
+    // the widget itself
+    Rectangle {
+        width: root.width;
+        height: root.height;
+        opacity: D.opacity;
+
+        Rectangle {
+            width: parent.width;
+            height: parent.height;
+            background: @linear-gradient(150deg, D.bg1, D.bg2);
+            border-radius: D.radius;
+            border-width: 1px;
+            border-color: D.edge;
+            clip: true;
+
+            if D.kind == "clock" : ClockFace { width: parent.width; height: parent.height; }
+            if D.kind == "weather" : WeatherView { width: parent.width; height: parent.height; }
+            if D.kind == "note" : NoteView { width: parent.width; height: parent.height; }
+            if D.kind == "todo" : TodoView { width: parent.width; height: parent.height; }
+            if D.kind == "websites" || D.kind == "shortcuts" : LinksView { width: parent.width; height: parent.height; }
+            if D.kind == "media" : MediaView { width: parent.width; height: parent.height; }
+            if D.kind == "music" : MusicView { width: parent.width; height: parent.height; }
+            if D.kind == "calendar" : CalendarView { width: parent.width; height: parent.height; }
+            if D.kind == "worldclock" : WorldView { width: parent.width; height: parent.height; }
+        }
+    }
+
+    // move + close buttons (only while the mouse is over the widget)
+    Rectangle {
+        visible: D.hovered && !D.locked;
+        x: root.width - self.width - 8px;
+        y: 8px;
+        width: 66px;
+        height: 28px;
+        border-radius: 14px;
+        background: #000000c8;
+        border-width: 1px;
+        border-color: #ffffff30;
+
+        Rectangle {
+            x: 0px;
+            width: 33px;
+            height: parent.height;
+            Glyph {
+                x: 8px;
+                y: 5px;
+                width: 18px;
+                height: 18px;
+                d: "M12 3 L12 21 M3 12 L21 12 M12 3 L9 6 M12 3 L15 6 M12 21 L9 18 M12 21 L15 18 M3 12 L6 9 M3 12 L6 15 M21 12 L18 9 M21 12 L18 15";
+            }
+            TouchArea {
+                mouse-cursor: MouseCursor.move;
+                pointer-event(e) => {
+                    if (e.kind == PointerEventKind.down) {
+                        D.drag-start();
+                    } else if (e.kind == PointerEventKind.up) {
+                        D.drag-end();
+                    }
+                }
+                moved => { D.drag-move(); }
+            }
+        }
+        Rectangle {
+            x: 33px;
+            width: 33px;
+            height: parent.height;
+            Glyph {
+                x: 8px;
+                y: 5px;
+                width: 18px;
+                height: 18px;
+                d: "M6 6 L18 18 M18 6 L6 18";
+                tint: #ff8a8a;
+            }
+            TouchArea {
+                clicked => { D.remove(); }
+            }
+        }
+    }
+
+    // resize corner
+    Rectangle {
+        visible: D.hovered && !D.locked;
+        x: root.width - self.width - 4px;
+        y: root.height - self.height - 4px;
+        width: 26px;
+        height: 26px;
+        border-radius: 13px;
+        background: #000000a0;
+        Glyph {
+            x: 5px;
+            y: 5px;
+            width: 16px;
+            height: 16px;
+            d: "M20 10 L10 20 M20 15 L15 20";
+        }
+        TouchArea {
+            mouse-cursor: MouseCursor.nwse-resize;
+            pointer-event(e) => {
+                if (e.kind == PointerEventKind.down) {
+                    D.resize-start();
+                } else if (e.kind == PointerEventKind.up) {
+                    D.resize-end();
+                }
+            }
+            moved => { D.resize-move(); }
+        }
+    }
+}

@@ -1,0 +1,239 @@
+import { Theme } from "../styles/themes.slint";
+import { Icons } from "../styles/icons.slint";
+import { Icon } from "controls.slint";
+import { Scroller } from "scroller.slint";
+
+// Icons used only by the quick settings page and its tab (24x24 grid).
+export global QIcons {
+    out property <string> wifi: "M 2 9 A 14 14 0 0 1 22 9 M 5 12.5 A 9.5 9.5 0 0 1 19 12.5 M 8.5 16 A 5 5 0 0 1 15.5 16 M 12 19.5 L 12 19.6";
+    out property <string> bluetooth: "M 7 7 L 17 17 L 12 22 L 12 2 L 17 7 L 7 17";
+    out property <string> airplane: "M 12 2 L 14 9 L 22 14 L 22 16 L 14 13.5 L 13 19 L 16 21 L 16 22 L 12 21 L 8 22 L 8 21 L 11 19 L 10 13.5 L 2 16 L 2 14 L 10 9 Z";
+    out property <string> access: "M 10 4 A 2 2 0 1 0 14 4 A 2 2 0 1 0 10 4 M 5 8 L 19 8 M 12 8 L 12 14 M 12 14 L 8 21 M 12 14 L 16 21";
+    out property <string> cast: "M 3 8 L 3 5 L 21 5 L 21 19 L 14 19 M 3 12 A 7 7 0 0 1 10 19 M 3 16 A 3 3 0 0 1 6 19";
+    out property <string> speaker: "M 4 9 L 8 9 L 13 5 L 13 19 L 8 15 L 4 15 Z M 16 9 A 4 4 0 0 1 16 15 M 18.5 6.5 A 8 8 0 0 1 18.5 17.5";
+    out property <string> hotspot: "M 12 11 L 12 11.1 M 8.5 8.5 A 5 5 0 0 0 8.5 15.5 M 15.5 8.5 A 5 5 0 0 1 15.5 15.5 M 5.5 5.5 A 9 9 0 0 0 5.5 18.5 M 18.5 5.5 A 9 9 0 0 1 18.5 18.5 M 12 12 L 12 21";
+    out property <string> camera: "M 3 7 L 17 7 L 17 17 L 3 17 Z M 17 11 L 21 8 L 21 16 L 17 13";
+    out property <string> shield: "M 12 3 L 19 6 L 19 12 A 9 9 0 0 1 12 21 A 9 9 0 0 1 5 12 L 5 6 Z";
+}
+
+// State shared with Rust (src/quick/mod.rs).
+export global QuickState {
+    in-out property <bool> wifi-on: false;
+    in-out property <bool> bt-on: false;
+    in-out property <bool> airplane-on: false;
+    in-out property <float> volume: 0.5;
+    in-out property <float> brightness: 0.5;
+    // false on PCs without a built-in screen (desktop computers)
+    in-out property <bool> brightness-ok: false;
+
+    callback set-wifi(bool);
+    callback set-bluetooth(bool);
+    callback set-airplane(bool);
+    callback set-volume(float);
+    callback set-brightness(float);
+    callback open-setting(string);
+}
+
+struct QTile {
+    label: string,
+    icon: string,
+    uri: string,
+}
+
+component Tile inherits Rectangle {
+    in property <string> d;
+    in property <string> label;
+    in property <bool> on: false;
+    callback clicked();
+
+    height: 40px;
+    border-radius: 12px;
+    background: root.on ? Theme.accent : (ta.has-hover ? Theme.chip-active : Theme.chip);
+    animate background { duration: 140ms; }
+
+    Icon {
+        x: 10px;
+        y: 11px;
+        width: 18px;
+        height: 18px;
+        d: root.d;
+        tint: root.on ? #0b1512 : Theme.text;
+    }
+    Text {
+        x: 36px;
+        y: 0px;
+        width: parent.width - 40px;
+        height: parent.height;
+        text: root.label;
+        color: root.on ? #0b1512 : Theme.text;
+        font-size: 11px;
+        overflow: elide;
+        vertical-alignment: center;
+    }
+    ta := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component SliderRow inherits Rectangle {
+    in property <string> d;
+    in-out property <float> value: 0.5;
+    callback edited(float);
+
+    height: 26px;
+
+    property <length> track-x: 30px;
+    property <length> track-w: root.width - 30px - 44px;
+
+    Icon {
+        x: 2px;
+        y: 4px;
+        width: 18px;
+        height: 18px;
+        d: root.d;
+        tint: Theme.text-dim;
+    }
+    Rectangle {
+        x: root.track-x;
+        y: 10px;
+        width: root.track-w;
+        height: 6px;
+        border-radius: 3px;
+        background: Theme.track;
+    }
+    Rectangle {
+        x: root.track-x;
+        y: 10px;
+        width: root.track-w * root.value;
+        height: 6px;
+        border-radius: 3px;
+        background: Theme.accent;
+    }
+    Rectangle {
+        x: root.track-x + root.track-w * root.value - 7px;
+        y: 6px;
+        width: 14px;
+        height: 14px;
+        border-radius: 7px;
+        background: #ffffff;
+    }
+    Text {
+        x: root.width - 40px;
+        y: 0px;
+        width: 40px;
+        height: parent.height;
+        text: "\{Math.round(root.value * 100)}%";
+        color: Theme.text-dim;
+        font-size: 11px;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+    }
+    TouchArea {
+        x: root.track-x - 7px;
+        width: root.track-w + 14px;
+        mouse-cursor: pointer;
+        pointer-event(e) => {
+            if (e.kind == PointerEventKind.down) {
+                root.value = Math.clamp((self.mouse-x - 7px) / root.track-w, 0, 1);
+                root.edited(root.value);
+            }
+        }
+        moved => {
+            if (self.pressed) {
+                root.value = Math.clamp((self.mouse-x - 7px) / root.track-w, 0, 1);
+                root.edited(root.value);
+            }
+        }
+    }
+}
+
+export component QuickSettings inherits Rectangle {
+    // three tiles per row, leaves a gutter on the right for the scrollbar
+    property <length> tw: (root.width - 10px - 12px) / 3;
+    // y where the "other settings" tiles start
+    property <length> rest-y: QuickState.brightness-ok ? 112px : 82px;
+
+    property <[QTile]> tiles: [
+        { label: "Energy saver", icon: Icons.battery, uri: "ms-settings:batterysaver" },
+        { label: "Night light", icon: Icons.moon, uri: "ms-settings:nightlight" },
+        { label: "Accessibility", icon: QIcons.access, uri: "ms-settings:easeofaccess" },
+        { label: "Cast", icon: QIcons.cast, uri: "ms-settings-connectabledevices:devicediscovery" },
+        { label: "Hotspot", icon: QIcons.hotspot, uri: "ms-settings:network-mobilehotspot" },
+        { label: "Nearby sharing", icon: Icons.link, uri: "ms-settings:crossdevice" },
+        { label: "Focus", icon: Icons.bell, uri: "ms-settings:quietmomentshome" },
+        { label: "VPN", icon: QIcons.shield, uri: "ms-settings:network-vpn" },
+        { label: "Camera", icon: QIcons.camera, uri: "ms-settings:camera" },
+        { label: "Display", icon: Icons.gpu, uri: "ms-settings:display" },
+        { label: "Sound", icon: QIcons.speaker, uri: "ms-settings:sound" },
+        { label: "Power", icon: Icons.battery, uri: "ms-settings:powersleep" },
+        { label: "Network", icon: Icons.globe, uri: "ms-settings:network" },
+        { label: "Updates", icon: Icons.down, uri: "ms-settings:windowsupdate" },
+        { label: "All settings", icon: Icons.sliders, uri: "ms-settings:" },
+    ];
+
+    Scroller {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        content-height: root.rest-y + 5 * 46px;
+
+        // row 1: the three real switches
+        Tile {
+            x: 0px;
+            y: 0px;
+            width: root.tw;
+            d: QIcons.wifi;
+            label: "Wi-Fi";
+            on: QuickState.wifi-on;
+            clicked => { QuickState.set-wifi(!QuickState.wifi-on); QuickState.wifi-on = !QuickState.wifi-on; }
+        }
+        Tile {
+            x: root.tw + 6px;
+            y: 0px;
+            width: root.tw;
+            d: QIcons.bluetooth;
+            label: "Bluetooth";
+            on: QuickState.bt-on;
+            clicked => { QuickState.set-bluetooth(!QuickState.bt-on); QuickState.bt-on = !QuickState.bt-on; }
+        }
+        Tile {
+            x: 2 * (root.tw + 6px);
+            y: 0px;
+            width: root.tw;
+            d: QIcons.airplane;
+            label: "Airplane";
+            on: QuickState.airplane-on;
+            clicked => { QuickState.set-airplane(!QuickState.airplane-on); QuickState.airplane-on = !QuickState.airplane-on; }
+        }
+
+        // sliders
+        if QuickState.brightness-ok : SliderRow {
+            x: 0px;
+            y: 48px;
+            width: root.width - 10px;
+            d: Icons.sun;
+            value <=> QuickState.brightness;
+            edited(v) => { QuickState.set-brightness(v); }
+        }
+        SliderRow {
+            x: 0px;
+            y: QuickState.brightness-ok ? 78px : 48px;
+            width: root.width - 10px;
+            d: QIcons.speaker;
+            value <=> QuickState.volume;
+            edited(v) => { QuickState.set-volume(v); }
+        }
+
+        // everything else opens the matching Windows settings page
+        for t[i] in root.tiles : Tile {
+            x: Math.mod(i, 3) * (root.tw + 6px);
+            y: root.rest-y + Math.floor(i / 3) * 46px;
+            width: root.tw;
+            d: t.icon;
+            label: t.label;
+            clicked => { QuickState.open-setting(t.uri); }
+        }
+    }
+}

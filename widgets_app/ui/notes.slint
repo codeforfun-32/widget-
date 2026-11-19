@@ -1,0 +1,195 @@
+import { D, TaskItem } from "data.slint";
+
+export component NoteView inherits Rectangle {
+    // paper tape on top
+    Rectangle {
+        x: (root.width - self.width) / 2;
+        y: -4px;
+        width: 72px;
+        height: 22px;
+        background: #ffffff70;
+    }
+    Text {
+        x: 18px;
+        y: 16px;
+        width: root.width - 36px;
+        text: D.title;
+        font-family: D.title-font;
+        font-weight: 700;
+        font-size: 26px;
+        color: D.ink;
+        overflow: elide;
+    }
+    body := TextInput {
+        x: 18px;
+        y: 62px;
+        width: root.width - 36px;
+        height: root.height - 76px;
+        text <=> D.body;
+        single-line: false;
+        wrap: word-wrap;
+        font-family: D.font;
+        font-size: D.text-size;
+        color: D.ink;
+        edited => { D.body-edited(self.text); }
+    }
+    if body.text == "" : Text {
+        x: 18px;
+        y: 62px;
+        text: D.placeholder;
+        font-family: D.font;
+        font-size: D.text-size;
+        color: D.ink.with-alpha(0.45);
+    }
+}
+
+export component TodoView inherits Rectangle {
+    property <length> row-h: 42px;
+    property <length> top: D.show-progress ? 78px : 62px;
+
+    Text {
+        x: 20px;
+        y: 18px;
+        width: root.width - 40px;
+        text: D.title;
+        font-family: D.font;
+        font-weight: 600;
+        font-size: 22px;
+        color: D.fg;
+        overflow: elide;
+    }
+    if D.show-progress : Rectangle {
+        x: 20px;
+        y: 56px;
+        width: root.width - 40px;
+        height: 6px;
+        border-radius: 3px;
+        background: D.fg.with-alpha(0.15);
+        Rectangle {
+            width: parent.width * D.progress;
+            height: parent.height;
+            border-radius: 3px;
+            background: D.accent;
+            animate width { duration: 200ms; }
+        }
+    }
+
+    if D.tasks.length == 0 : Text {
+        x: 20px;
+        y: root.top + 4px;
+        text: "No tasks yet";
+        font-family: D.font;
+        font-size: 14px;
+        color: D.fg2;
+    }
+
+    Flickable {
+        x: 0px;
+        y: root.top;
+        width: root.width;
+        height: root.height - root.top - 60px;
+        viewport-height: D.tasks.length * root.row-h;
+        for t[i] in D.tasks : Rectangle {
+            y: i * root.row-h;
+            width: root.width;
+            height: root.row-h;
+            Rectangle {
+                x: 20px;
+                y: (parent.height - self.height) / 2;
+                width: 20px;
+                height: 20px;
+                border-radius: 10px;
+                background: t.done ? D.accent : transparent;
+                border-width: 2px;
+                border-color: t.done ? D.accent : D.fg2;
+                Path {
+                    visible: t.done;
+                    width: parent.width;
+                    height: parent.height;
+                    viewbox-width: 24;
+                    viewbox-height: 24;
+                    commands: "M6 12.5 L10.5 17 L18 8";
+                    stroke: #101114;
+                    stroke-width: 2.4px;
+                    stroke-line-cap: round;
+                    fill: transparent;
+                }
+            }
+            Text {
+                x: 52px;
+                width: root.width - 52px - 44px;
+                height: parent.height;
+                text: t.text;
+                font-family: D.font;
+                font-size: 15px;
+                color: t.done ? D.fg2 : D.fg;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            TouchArea {
+                x: 0px;
+                width: root.width - 44px;
+                clicked => { D.todo-toggle(i); }
+            }
+            Rectangle {
+                x: root.width - 40px;
+                y: (parent.height - self.height) / 2;
+                width: 24px;
+                height: 24px;
+                border-radius: 12px;
+                background: rm.has-hover ? D.fg.with-alpha(0.15) : transparent;
+                Text {
+                    text: "×";
+                    width: parent.width;
+                    height: parent.height;
+                    font-size: 18px;
+                    color: D.fg2;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+                rm := TouchArea {
+                    clicked => { D.todo-remove(i); }
+                }
+            }
+        }
+    }
+
+    // add a task
+    Rectangle {
+        x: 14px;
+        y: root.height - 50px;
+        width: root.width - 28px;
+        height: 38px;
+        border-radius: 12px;
+        background: D.fg.with-alpha(0.08);
+        Text {
+            x: 12px;
+            height: parent.height;
+            text: "+";
+            font-size: 20px;
+            color: D.accent;
+            vertical-alignment: center;
+        }
+        add := TextInput {
+            x: 36px;
+            y: (parent.height - self.height) / 2;
+            width: parent.width - 48px;
+            font-family: D.font;
+            font-size: 15px;
+            color: D.fg;
+            accepted => {
+                D.todo-add(self.text);
+                self.text = "";
+            }
+        }
+        if add.text == "" : Text {
+            x: 36px;
+            height: parent.height;
+            text: "Add task";
+            font-family: D.font;
+            font-size: 15px;
+            color: D.fg2;
+            vertical-alignment: center;
+        }
+    }
+}

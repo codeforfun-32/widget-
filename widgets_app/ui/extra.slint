@@ -1,0 +1,415 @@
+import { D, CalCell, ZoneRow } from "data.slint";
+
+// ───────── image / gif / video ─────────
+export component MediaView inherits Rectangle {
+    if D.has-media : Image {
+        width: root.width;
+        height: root.height;
+        source: D.media-image;
+        image-fit: D.media-fit == 0 ? ImageFit.cover : (D.media-fit == 1 ? ImageFit.contain : ImageFit.fill);
+    }
+    if !D.has-media : Rectangle {
+        width: root.width;
+        height: root.height;
+        background: #1b1d24;
+        Text {
+            x: 20px;
+            width: root.width - 40px;
+            height: root.height;
+            text: D.media-msg;
+            wrap: word-wrap;
+            font-family: D.font;
+            font-size: 15px;
+            color: D.fg2;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        TouchArea {
+            clicked => { D.media-choose(); }
+        }
+    }
+}
+
+// ───────── music ─────────
+component RoundBtn inherits Rectangle {
+    in property <string> d;
+    in property <bool> big: false;
+    in property <color> fill-color: #ffffff;
+    callback clicked();
+    border-radius: self.width / 2;
+    background: ta.has-hover ? #ffffff40 : #ffffff22;
+    Path {
+        x: root.width * 0.25;
+        y: root.height * 0.25;
+        width: root.width * 0.5;
+        height: root.height * 0.5;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.d;
+        fill: root.fill-color;
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}
+
+component Controls inherits Rectangle {
+    property <length> b: Math.min(root.height, 44px);
+    RoundBtn {
+        x: 0px;
+        y: (root.height - self.height) / 2;
+        width: root.b;
+        height: root.b;
+        d: "M6 5 L8.5 5 L8.5 19 L6 19 Z M19 5 L19 19 L9.5 12 Z";
+        clicked => { D.music-cmd("prev"); }
+    }
+    RoundBtn {
+        x: root.b + 8px;
+        y: (root.height - self.height) / 2;
+        width: root.b;
+        height: root.b;
+        fill-color: #101114;
+        d: D.m-playing ? "M7 5 L10.5 5 L10.5 19 L7 19 Z M13.5 5 L17 5 L17 19 L13.5 19 Z" : "M8 5 L19 12 L8 19 Z";
+        background: D.accent;
+        clicked => { D.music-cmd("toggle"); }
+    }
+    RoundBtn {
+        x: 2 * root.b + 16px;
+        y: (root.height - self.height) / 2;
+        width: root.b;
+        height: root.b;
+        d: "M18 5 L15.5 5 L15.5 19 L18 19 Z M5 5 L5 19 L14.5 12 Z";
+        clicked => { D.music-cmd("next"); }
+    }
+}
+
+export component MusicView inherits Rectangle {
+    property <length> ctl-w: 3 * Math.min(root.height * 0.5, 44px) + 16px;
+
+    // ----- pill -----
+    if D.style == "Pill" : Rectangle {
+        width: root.width;
+        height: root.height;
+        if D.show-art : Rectangle {
+            x: root.height * 0.14;
+            y: root.height * 0.14;
+            width: root.height * 0.72;
+            height: self.width;
+            border-radius: self.width / 2;
+            background: D.accent.with-alpha(0.35);
+            clip: true;
+            if D.m-has-art : Image {
+                width: parent.width;
+                height: parent.height;
+                source: D.m-art;
+                image-fit: cover;
+            }
+        }
+        Text {
+            x: (D.show-art ? root.height * 0.14 + root.height * 0.72 : 0px) + 16px;
+            y: root.height * 0.27;
+            width: root.width - self.x - root.ctl-w - 26px;
+            text: D.m-title;
+            font-family: D.font;
+            font-weight: 600;
+            font-size: Math.min(root.height * 0.2, 20px);
+            color: D.fg;
+            overflow: elide;
+        }
+        Text {
+            x: (D.show-art ? root.height * 0.14 + root.height * 0.72 : 0px) + 16px;
+            y: root.height * 0.55;
+            width: root.width - self.x - root.ctl-w - 26px;
+            text: D.m-artist;
+            font-family: D.font;
+            font-size: Math.min(root.height * 0.15, 14px);
+            color: D.fg2;
+            overflow: elide;
+        }
+        Controls {
+            x: root.width - root.ctl-w - 14px;
+            y: root.height * 0.25;
+            width: root.ctl-w;
+            height: root.height * 0.5;
+        }
+    }
+
+    // ----- mini -----
+    if D.style == "Mini" : Rectangle {
+        width: root.width;
+        height: root.height;
+        Text {
+            x: 16px;
+            y: root.height * 0.2;
+            width: root.width - 32px - 52px;
+            text: D.m-title;
+            font-family: D.font;
+            font-weight: 600;
+            font-size: Math.min(root.height * 0.3, 18px);
+            color: D.fg;
+            overflow: elide;
+        }
+        Text {
+            x: 16px;
+            y: root.height * 0.55;
+            width: root.width - 32px - 52px;
+            text: D.m-artist;
+            font-family: D.font;
+            font-size: Math.min(root.height * 0.22, 13px);
+            color: D.fg2;
+            overflow: elide;
+        }
+        RoundBtn {
+            x: root.width - self.width - 14px;
+            y: (root.height - self.height) / 2;
+            width: Math.min(root.height * 0.6, 40px);
+            height: self.width;
+            fill-color: #101114;
+            background: D.accent;
+            d: D.m-playing ? "M7 5 L10.5 5 L10.5 19 L7 19 Z M13.5 5 L17 5 L17 19 L13.5 19 Z" : "M8 5 L19 12 L8 19 Z";
+            clicked => { D.music-cmd("toggle"); }
+        }
+    }
+
+    // ----- card -----
+    if D.style == "Card" : Rectangle {
+        width: root.width;
+        height: root.height;
+        property <length> art: Math.min(root.width - 40px, root.height * 0.5);
+        if D.show-art : Rectangle {
+            x: (root.width - self.width) / 2;
+            y: 18px;
+            width: parent.art;
+            height: self.width;
+            border-radius: 18px;
+            background: D.accent.with-alpha(0.3);
+            clip: true;
+            if D.m-has-art : Image {
+                width: parent.width;
+                height: parent.height;
+                source: D.m-art;
+                image-fit: cover;
+            }
+        }
+        Text {
+            x: 20px;
+            y: (D.show-art ? parent.art + 30px : 18px);
+            width: root.width - 40px;
+            text: D.m-title;
+            font-family: D.font;
+            font-weight: 700;
+            font-size: 20px;
+            color: D.fg;
+            horizontal-alignment: center;
+            overflow: elide;
+        }
+        Text {
+            x: 20px;
+            y: (D.show-art ? parent.art + 58px : 46px);
+            width: root.width - 40px;
+            text: D.m-artist;
+            font-family: D.font;
+            font-size: 14px;
+            color: D.fg2;
+            horizontal-alignment: center;
+            overflow: elide;
+        }
+        Rectangle {
+            x: 24px;
+            y: root.height - 78px;
+            width: root.width - 48px;
+            height: 4px;
+            border-radius: 2px;
+            background: D.fg.with-alpha(0.2);
+            Rectangle {
+                width: parent.width * D.m-progress;
+                height: parent.height;
+                border-radius: 2px;
+                background: D.accent;
+            }
+        }
+        Controls {
+            x: (root.width - (3 * 44px + 16px)) / 2;
+            y: root.height - 62px;
+            width: 3 * 44px + 16px;
+            height: 44px;
+        }
+    }
+}
+
+// ───────── calendar ─────────
+export component CalendarView inherits Rectangle {
+    property <bool> compact: D.style == "Compact";
+    property <length> pad: root.compact ? 12px : 16px;
+    property <length> head-h: root.compact ? 34px : 44px;
+    property <length> days-h: root.compact ? 0px : 24px;
+    property <length> cw: (root.width - 2 * root.pad) / 7;
+    property <length> ch: (root.height - root.head-h - root.days-h - root.pad) / D.cal-rows;
+    property <length> fs: Math.min(root.cw * 0.4, root.ch * 0.4);
+
+    // header
+    Rectangle {
+        x: root.pad;
+        y: 6px;
+        width: 30px;
+        height: root.head-h - 6px;
+        Text {
+            width: parent.width;
+            height: parent.height;
+            text: "‹";
+            font-size: 24px;
+            color: D.fg2;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        TouchArea {
+            clicked => { D.cal-step(-1); }
+        }
+    }
+    Rectangle {
+        x: root.pad + 30px;
+        y: 6px;
+        width: root.width - 2 * root.pad - 60px;
+        height: root.head-h - 6px;
+        Text {
+            width: parent.width;
+            height: parent.height;
+            text: D.cal-title;
+            font-family: D.font;
+            font-weight: 600;
+            font-size: root.compact ? 15px : 17px;
+            letter-spacing: 1px;
+            color: D.fg;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        TouchArea {
+            clicked => { D.cal-step(0); }
+        }
+    }
+    Rectangle {
+        x: root.width - root.pad - 30px;
+        y: 6px;
+        width: 30px;
+        height: root.head-h - 6px;
+        Text {
+            width: parent.width;
+            height: parent.height;
+            text: "›";
+            font-size: 24px;
+            color: D.fg2;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+        TouchArea {
+            clicked => { D.cal-step(1); }
+        }
+    }
+
+    // week days
+    if !root.compact : Rectangle {
+        y: root.head-h;
+        width: root.width;
+        height: root.days-h;
+        for h[i] in D.cal-heads : Text {
+            x: root.pad + i * root.cw;
+            width: root.cw;
+            height: parent.height;
+            text: h;
+            font-family: D.font;
+            font-size: 12px;
+            color: D.fg2;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+
+    // days
+    for c[i] in D.cal-cells : Rectangle {
+        x: root.pad + Math.mod(i, 7) * root.cw;
+        y: root.head-h + root.days-h + Math.floor(i / 7) * root.ch;
+        width: root.cw;
+        height: root.ch;
+        Rectangle {
+            width: Math.min(parent.width, parent.height) * 0.86;
+            height: self.width;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2;
+            border-radius: self.width / 2;
+            background: c.today ? D.accent : transparent;
+        }
+        Text {
+            width: parent.width;
+            height: parent.height;
+            text: c.text;
+            font-family: D.font;
+            font-weight: c.today ? 700 : 400;
+            font-size: root.fs;
+            color: c.today ? #101114 : (c.dim ? D.fg.with-alpha(0.25) : (c.weekend ? D.fg2 : D.fg));
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+    }
+}
+
+// ───────── world clock ─────────
+export component WorldView inherits Rectangle {
+    property <length> head: 52px;
+    property <length> rh: (root.height - root.head - 10px) / Math.max(D.zones.length, 1);
+
+    Text {
+        x: 20px;
+        y: 16px;
+        width: root.width - 40px;
+        text: D.title;
+        font-family: D.font;
+        font-weight: 700;
+        font-size: 20px;
+        color: D.fg;
+        overflow: elide;
+    }
+    for z[i] in D.zones : Rectangle {
+        y: root.head + i * root.rh;
+        width: root.width;
+        height: root.rh;
+        Rectangle {
+            x: 20px;
+            width: root.width - 40px;
+            height: 1px;
+            background: D.fg.with-alpha(0.08);
+        }
+        Text {
+            x: 20px;
+            y: parent.height * 0.18;
+            width: root.width * 0.5;
+            text: z.city;
+            font-family: D.font;
+            font-weight: 600;
+            font-size: Math.min(parent.height * 0.3, 17px);
+            color: D.fg;
+            overflow: elide;
+        }
+        Text {
+            x: 20px;
+            y: parent.height * 0.56;
+            width: root.width * 0.5;
+            text: z.sub;
+            font-family: D.font;
+            font-size: Math.min(parent.height * 0.22, 12px);
+            color: D.fg2;
+            overflow: elide;
+        }
+        Text {
+            x: root.width * 0.45;
+            width: root.width * 0.55 - 20px;
+            height: parent.height;
+            text: z.time;
+            font-family: D.font;
+            font-weight: 300;
+            font-size: Math.min(parent.height * 0.5, 30px);
+            color: D.accent;
+            horizontal-alignment: right;
+            vertical-alignment: center;
+        }
+    }
+}

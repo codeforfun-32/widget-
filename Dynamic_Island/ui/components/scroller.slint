@@ -1,0 +1,19 @@
+// Scrollable area with no visible scrollbar. Scroll with the mouse wheel.
+// Set `content-height` to the total height of the content inside.
+export component Scroller inherits Rectangle {
+    in property <length> content-height: 0px;
+
+    clip: true;
+
+    Flickable {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        interactive: false;
+        content-width: self.width;
+        content-height: Math.max(root.content-height, self.height);
+
+        @children
+    }
+}

@@ -1,0 +1,24 @@
+[package]
+name = "taskbar-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+slint = { version = "1.18", features = ["raw-window-handle-06"] }
+raw-window-handle = "0.6"
+shared = { path = "../shared" }
+image = "0.25"
+
+windows = { version = "0.62", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_Graphics_Dwm",
+    "Win32_System_SystemInformation",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_WindowsAndMessaging",
+] }
+
+[build-dependencies]
+slint-build = "1.18"

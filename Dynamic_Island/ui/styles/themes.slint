@@ -1,0 +1,19 @@
+export global Theme {
+    // true = OLED Black, false = Smoked Liquid Glass
+    in-out property <bool> oled: true;
+
+    out property <color> surface: oled ? #000000 : #1b1c20e8;
+    out property <color> border: oled ? #ffffff1f : #ffffff3d;
+    out property <color> sheen-top: oled ? #ffffff00 : #ffffff2e;
+    out property <color> chip: oled ? #ffffff14 : #ffffff1f;
+    out property <color> chip-active: #ffffff33;
+    out property <color> track: #ffffff22;
+
+    out property <color> text: #f5f5f7;
+    out property <color> text-dim: #f5f5f7a0;
+    out property <color> accent: #7cf0c9;
+    out property <color> danger: #ff7a7a;
+
+    out property <color> mascot: #ffd479;
+    out property <color> mascot-ink: #2b2014;
+}

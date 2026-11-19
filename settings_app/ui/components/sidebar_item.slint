@@ -1,0 +1,31 @@
+import { Theme } from "../styles/theme.slint";
+
+export component SidebarItem inherits Rectangle {
+    in property <string> label;
+    in property <bool> active;
+    callback clicked();
+
+    height: 38px;
+    border-radius: 9px;
+    background: root.active ? Theme.row : (ta.has-hover ? #ffffff10 : transparent);
+
+    Rectangle {
+        x: 0px;
+        y: 10px;
+        width: 3px;
+        height: parent.height - 20px;
+        border-radius: 2px;
+        background: root.active ? Theme.accent : transparent;
+    }
+    Text {
+        x: 16px;
+        text: root.label;
+        color: root.active ? Theme.text : Theme.muted;
+        font-size: 14px;
+        font-weight: root.active ? 600 : 400;
+        vertical-alignment: center;
+    }
+    ta := TouchArea {
+        clicked => { root.clicked(); }
+    }
+}

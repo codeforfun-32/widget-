@@ -1,0 +1,22 @@
+import { Theme } from "../styles/themes.slint";
+
+export component Ticker inherits Rectangle {
+    in property <string> text;
+    in property <bool> shown;
+
+    opacity: root.shown ? 1 : 0;
+    animate opacity { duration: 160ms; }
+
+    Text {
+        x: 0px;
+        y: 0px;
+        width: parent.width;
+        height: parent.height;
+        text: root.text;
+        color: Theme.text;
+        font-size: 13px;
+        overflow: elide;
+        horizontal-alignment: right;
+        vertical-alignment: center;
+    }
+}

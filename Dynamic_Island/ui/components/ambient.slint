@@ -1,0 +1,17 @@
+// ui/components/ambient.slint
+import { Theme } from "../styles/themes.slint";
+
+export component AmbientGlow inherits Rectangle {
+    in property <image> art;
+    in property <color> glow-color: Theme.accent;
+    
+    // The blurred, glowing background based on the dominant color
+    Rectangle {
+        x: 0; y: 0;
+        width: parent.width; height: parent.height;
+        background: root.glow-color;
+        opacity: 0.3; // Adjust for intensity (0.1 to 0.5)
+        drop-shadow-blur: 40px;
+        drop-shadow-color: root.glow-color;
+    }
+}

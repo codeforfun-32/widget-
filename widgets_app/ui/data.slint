@@ -1,0 +1,118 @@
+// Everything a widget window shows. Each widget window has its own copy of D,
+// the Rust side fills it in and the pieces of the UI just read it.
+
+export struct TaskItem { text: string, done: bool }
+export struct LinkItem { name: string, icon: image, has-icon: bool, glyph: string, letter: string, empty: bool }
+export struct CalCell { text: string, dim: bool, today: bool, weekend: bool }
+export struct HourItem { label: string, temp: string, code: int }
+export struct ZoneRow { city: string, time: string, sub: string }
+export struct Numeral { text: string, x: float, y: float }
+
+export global D {
+    // ----- common -----
+    in-out property <string> kind;
+    in-out property <string> style;
+    in-out property <color> accent: #7cf0c9;
+    in-out property <color> fg: #ffffff;
+    in-out property <color> fg2: #ffffffb0;
+    in-out property <color> bg1: #00000000;
+    in-out property <color> bg2: #00000000;
+    in-out property <color> edge: #00000000;
+    in-out property <length> radius: 18px;
+    in-out property <string> font: "Segoe UI";
+    in-out property <float> opacity: 1.0;
+    in-out property <bool> hovered: false;
+    in-out property <bool> locked: false;
+    in-out property <string> title;
+    in-out property <string> title-font: "Segoe Script";
+
+    // ----- clock -----
+    in-out property <string> time;
+    in-out property <int> time-chars: 5;
+    in-out property <string> hh;
+    in-out property <string> mm;
+    in-out property <string> secs;
+    in-out property <string> ampm;
+    in-out property <string> day;
+    in-out property <string> date;
+    in-out property <string> month-name;
+    in-out property <string> day-num;
+    in-out property <string> word-time;
+    in-out property <bool> show-seconds: false;
+    in-out property <string> hand-h;
+    in-out property <string> hand-m;
+    in-out property <string> hand-s;
+    in-out property <string> ticks;
+    in-out property <[Numeral]> numerals;
+
+    // ----- weather -----
+    in-out property <string> w-layout: "Full";
+    in-out property <string> w-status;
+    in-out property <string> w-temp;
+    in-out property <string> w-feels;
+    in-out property <string> w-cond;
+    in-out property <string> w-wind;
+    in-out property <string> w-humidity;
+    in-out property <string> w-place;
+    in-out property <string> w-hilo;
+    in-out property <int> w-code: 3;
+    in-out property <color> face1: #6c7684;
+    in-out property <color> face2: #4a5260;
+    in-out property <[HourItem]> w-hours;
+    in-out property <[HourItem]> w-days;
+
+    // ----- note / to-do -----
+    in-out property <string> body;
+    in-out property <string> placeholder: "Write a note...";
+    in-out property <length> text-size: 16px;
+    in-out property <[TaskItem]> tasks;
+    in-out property <float> progress: 0.0;
+    in-out property <bool> show-progress: true;
+    in-out property <color> ink: #3b3320;
+
+    // ----- links -----
+    in-out property <[LinkItem]> items;
+    in-out property <string> link-layout: "List";
+    in-out property <int> cols: 3;
+    in-out property <bool> banner: false;
+
+    // ----- media -----
+    in-out property <image> media-image;
+    in-out property <bool> has-media: false;
+    in-out property <int> media-fit: 0;
+    in-out property <string> media-msg: "Choose a picture, GIF or MP4 in settings";
+
+    // ----- music -----
+    in-out property <string> m-title: "Nothing playing";
+    in-out property <string> m-artist;
+    in-out property <image> m-art;
+    in-out property <bool> m-has-art: false;
+    in-out property <bool> m-playing: false;
+    in-out property <float> m-progress: 0.0;
+    in-out property <bool> show-art: true;
+
+    // ----- calendar / world clock -----
+    in-out property <string> cal-title;
+    in-out property <[string]> cal-heads;
+    in-out property <[CalCell]> cal-cells;
+    in-out property <int> cal-rows: 5;
+    in-out property <[ZoneRow]> zones;
+
+    // ----- window actions (Rust handles these) -----
+    callback remove();
+    callback drag-start();
+    callback drag-move();
+    callback drag-end();
+    callback resize-start();
+    callback resize-move();
+    callback resize-end();
+    callback todo-toggle(int);
+    callback todo-remove(int);
+    callback todo-add(string);
+    callback body-edited(string);
+    callback open-item(int);
+    callback add-item(int);
+    callback music-cmd(string);
+    callback cal-step(int);
+    callback media-choose();
+}

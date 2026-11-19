@@ -1,0 +1,96 @@
+import { Theme } from "../styles/themes.slint";
+import { Chip } from "controls.slint";
+
+export struct CalCell {
+    day: int,
+    in-month: bool,
+    today: bool,
+}
+
+export global CalIcon {
+    out property <string> d: "M 4 6 L 20 6 L 20 20 L 4 20 Z M 4 10 L 20 10 M 8 3 L 8 7 M 16 3 L 16 7";
+}
+
+export component CalendarView inherits Rectangle {
+    in property <[CalCell]> cells;
+    in property <string> title;
+    in property <int> today-day: 1;
+    in property <string> today-name;
+    callback step(int);
+    callback go-today();
+
+    // left side: today and month buttons
+    Text {
+        x: 0px; y: 0px; width: 100px; height: 16px;
+        text: root.today-name;
+        color: Theme.accent;
+        font-size: 12px;
+        font-weight: 700;
+        vertical-alignment: center;
+    }
+    Text {
+        x: 0px; y: 14px; width: 100px; height: 56px;
+        text: "\{root.today-day}";
+        color: Theme.text;
+        font-size: 44px;
+        font-weight: 700;
+        vertical-alignment: center;
+    }
+    Text {
+        x: 0px; y: 72px; width: 104px; height: 18px;
+        text: root.title;
+        color: Theme.text-dim;
+        font-size: 12px;
+        overflow: elide;
+        vertical-alignment: center;
+    }
+    Chip { x: 0px;  y: 98px; width: 26px; text: "<";     clicked => { root.step(-1); } }
+    Chip { x: 30px; y: 98px; width: 40px; text: "Today"; clicked => { root.go-today(); } }
+    Chip { x: 74px; y: 98px; width: 26px; text: ">";     clicked => { root.step(1); } }
+
+    // right side: month grid
+    Rectangle {
+        x: 108px;
+        y: 0px;
+        width: parent.width - 108px;
+        height: parent.height;
+
+        for d[i] in ["S", "M", "T", "W", "T", "F", "S"] : Text {
+            x: i * (parent.width / 7);
+            y: 0px;
+            width: parent.width / 7;
+            height: 16px;
+            text: d;
+            color: Theme.text-dim;
+            font-size: 10px;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+        }
+
+        for c[i] in root.cells : Rectangle {
+            x: Math.mod(i, 7) * (parent.width / 7);
+            y: 18px + Math.floor(i / 7) * 18px;
+            width: parent.width / 7;
+            height: 18px;
+
+            if c.today : Rectangle {
+                x: (parent.width - 22px) / 2;
+                y: 1px;
+                width: 22px;
+                height: 16px;
+                border-radius: 8px;
+                background: Theme.accent;
+            }
+            Text {
+                width: parent.width;
+                height: parent.height;
+                text: "\{c.day}";
+                color: c.today ? #0b1512 : (c.in-month ? Theme.text : #f5f5f750);
+                font-size: 11px;
+                font-weight: c.today ? 700 : 400;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+            }
+        }
+    }
+}

@@ -1,0 +1,104 @@
+import { LineEdit, ScrollView } from "std-widgets.slint";
+import { Theme } from "styles/theme.slint";
+import { SidebarItem } from "components/sidebar_item.slint";
+import { SettingRow, Row } from "components/setting_row.slint";
+import { Preview } from "components/preview.slint";
+import { WidgetsPanel, KindCard, InstItem } from "components/widgets_panel.slint";
+
+export { Row, KindCard, InstItem }
+
+export component SettingsApp inherits Window {
+    title: "Dynamic Island Settings";
+    preferred-width: 1000px;
+    preferred-height: 700px;
+    min-width: 820px;
+    min-height: 520px;
+    background: Theme.bg;
+
+    in property <[string]> pages;
+    in-out property <int> page;
+    in-out property <string> query;
+    in property <[Row]> rows;
+    in property <color> p-accent: #7cf0c9;
+    in property <length> p-radius: 17px;
+    in property <length> p-width: 220px;
+
+    in property <bool> widgets-page: false;
+    in property <bool> widgets-on: true;
+    in property <[KindCard]> kinds;
+    in property <[InstItem]> insts;
+    in property <[Row]> inst-rows;
+
+    callback add-widget(int);
+    callback inst-toggle(int);
+    callback inst-delete(int);
+    callback inst-dup(int);
+    callback inst-changed(int, string);
+
+    callback page-selected(int);
+    callback search(string);
+    callback changed(int, string);
+
+    HorizontalLayout {
+        Rectangle {
+            width: 230px;
+            background: Theme.panel;
+
+            VerticalLayout {
+                padding: 16px;
+                spacing: 6px;
+                alignment: start;
+
+                Text {
+                    text: "Settings";
+                    color: Theme.text;
+                    font-size: 22px;
+                    font-weight: 700;
+                }
+                Rectangle { height: 6px; }
+                LineEdit {
+                    placeholder-text: "Search settings";
+                    text <=> root.query;
+                    edited(t) => { root.search(t); }
+                }
+                Rectangle { height: 8px; }
+                for p[i] in root.pages : SidebarItem {
+                    label: p;
+                    active: i == root.page && root.query == "";
+                    clicked => { root.page-selected(i); }
+                }
+            }
+        }
+
+        VerticalLayout {
+            padding: 22px;
+            spacing: 10px;
+
+            if !root.widgets-page : Preview {
+                accent: root.p-accent;
+                radius: root.p-radius;
+                pill-width: root.p-width;
+            }
+            ScrollView {
+                VerticalLayout {
+                    for r[i] in root.rows : SettingRow {
+                        item: r;
+                        idx: i;
+                        changed(index, v) => { root.changed(index, v); }
+                    }
+                    if root.widgets-page && root.query == "" : WidgetsPanel {
+                        kinds: root.kinds;
+                        insts: root.insts;
+                        inst-rows: root.inst-rows;
+                        widgets-on: root.widgets-on;
+                        add-widget(i) => { root.add-widget(i); }
+                        toggle(id) => { root.inst-toggle(id); }
+                        remove(id) => { root.inst-delete(id); }
+                        duplicate(id) => { root.inst-dup(id); }
+                        changed(index, v) => { root.inst-changed(index, v); }
+                    }
+                }
+            }
+        }
+    }
+}

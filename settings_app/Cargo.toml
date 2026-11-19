@@ -1,0 +1,11 @@
+[package]
+name = "settings-app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+slint = "1.18"
+shared = { path = "../shared" }
+
+[build-dependencies]
+slint-build = "1.18"

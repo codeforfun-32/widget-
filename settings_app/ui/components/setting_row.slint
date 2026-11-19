@@ -1,0 +1,185 @@
+import { Switch, ComboBox, Slider, LineEdit, Button, TextEdit } from "std-widgets.slint";
+import { Theme } from "../styles/theme.slint";
+
+// kind: 0 toggle, 1 choice, 2 slider, 3 text, 4 colour, 5 note, 6 button, 7 header, 8 multi-line text
+export struct Row {
+    kind: int,
+    key: string,
+    title: string,
+    desc: string,
+    value: string,
+    options: [string],
+    swatches: [color],
+    num: int,
+    min: int,
+    max: int,
+    ready: bool,
+    on: bool,
+}
+
+export component SettingRow inherits Rectangle {
+    in property <Row> item;
+    in property <int> idx;
+    callback changed(int, string);
+
+    height: item.kind == 7 ? 42px : (item.kind == 5 ? 62px : (item.kind == 8 ? 176px : 64px));
+
+    // Section header
+    if item.kind == 7 : Text {
+        y: 14px;
+        text: item.title;
+        color: Theme.muted;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    // Note
+    if item.kind == 5 : Rectangle {
+        y: 4px;
+        height: parent.height - 8px;
+        background: Theme.panel;
+        border-radius: 10px;
+        Text {
+            x: 14px;
+            width: parent.width - 28px;
+            height: parent.height;
+            text: item.desc;
+            wrap: word-wrap;
+            color: Theme.muted;
+            font-size: 13px;
+            vertical-alignment: center;
+        }
+    }
+
+    // Multi-line text
+    if item.kind == 8 : Rectangle {
+        y: 3px;
+        height: parent.height - 6px;
+        background: Theme.row;
+        border-radius: 10px;
+        Text {
+            x: 16px;
+            y: 10px;
+            text: item.title;
+            color: Theme.text;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        Text {
+            x: 16px;
+            y: 30px;
+            width: parent.width - 32px;
+            text: item.desc;
+            color: Theme.muted;
+            font-size: 12px;
+            overflow: elide;
+        }
+        TextEdit {
+            x: 12px;
+            y: 54px;
+            width: parent.width - 24px;
+            height: parent.height - 66px;
+            text: item.value;
+            font-size: 13px;
+            edited(t) => { root.changed(root.idx, t); }
+        }
+    }
+
+    // Normal setting
+    if item.kind != 7 && item.kind != 5 && item.kind != 8 : Rectangle {
+        y: 3px;
+        height: parent.height - 6px;
+        background: Theme.row;
+        border-radius: 10px;
+        opacity: item.ready ? 1.0 : 0.45;
+
+        VerticalLayout {
+            x: 16px;
+            y: 0px;
+            width: parent.width - 340px;
+            height: parent.height;
+            alignment: center;
+            spacing: 2px;
+            Text {
+                text: item.title;
+                color: Theme.text;
+                font-size: 14px;
+                font-weight: 600;
+                overflow: elide;
+            }
+            Text {
+                text: item.desc;
+                color: Theme.muted;
+                font-size: 12px;
+                overflow: elide;
+            }
+        }
+
+        Rectangle {
+            x: parent.width - 320px;
+            width: 304px;
+            height: parent.height;
+
+            HorizontalLayout {
+                alignment: end;
+                VerticalLayout {
+                    alignment: center;
+
+                    if item.kind == 0 : Switch {
+                        checked: item.on;
+                        toggled => { root.changed(root.idx, self.checked ? "1" : "0"); }
+                    }
+                    if item.kind == 1 : ComboBox {
+                        width: 200px;
+                        model: item.options;
+                        current-value: item.value;
+                        selected(v) => { root.changed(root.idx, v); }
+                    }
+                    if item.kind == 2 : HorizontalLayout {
+                        spacing: 10px;
+                        Slider {
+                            width: 220px;
+                            minimum: item.min;
+                            maximum: item.max;
+                            value: item.num;
+                            changed(v) => { root.changed(root.idx, "\{Math.round(v)}"); }
+                        }
+                        Text {
+                            width: 40px;
+                            text: item.num;
+                            color: Theme.text;
+                            font-size: 13px;
+                            vertical-alignment: center;
+                        }
+                    }
+                    if item.kind == 3 : LineEdit {
+                        width: 220px;
+                        text: item.value;
+                        edited(t) => { root.changed(root.idx, t); }
+                    }
+                    if item.kind == 4 : HorizontalLayout {
+                        spacing: 4px;
+                        for sw[i] in item.swatches : Rectangle {
+                            width: 20px;
+                            height: 20px;
+                            border-radius: 10px;
+                            background: sw;
+                            border-width: item.value == item.options[i] ? 2px : 0px;
+                            border-color: #ffffff;
+                            TouchArea {
+                                clicked => { root.changed(root.idx, item.options[i]); }
+                            }
+                        }
+                    }
+                    if item.kind == 6 : Button {
+                        text: item.value;
+                        clicked => { root.changed(root.idx, "1"); }
+                    }
+                }
+            }
+
+            // blocks clicks on "coming soon" settings
+            if !item.ready : TouchArea { }
+        }
+    }
+}

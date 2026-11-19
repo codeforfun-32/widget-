@@ -1,0 +1,185 @@
+import { D, LinkItem } from "data.slint";
+
+component Tile inherits Rectangle {
+    in property <LinkItem> it;
+    in property <length> corner: 16px;
+    border-radius: root.corner;
+    background: root.it.empty ? D.fg.with-alpha(0.07) : (root.it.has-icon ? transparent : D.fg.with-alpha(0.10));
+    border-width: root.it.has-icon ? 0px : 1px;
+    border-color: D.fg.with-alpha(0.10);
+
+    if root.it.empty : Text {
+        width: root.width;
+        height: root.height;
+        text: "+";
+        font-size: root.width * 0.5;
+        color: D.fg2;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+    if !root.it.empty && root.it.has-icon : Image {
+        width: root.width;
+        height: root.height;
+        source: root.it.icon;
+        image-fit: contain;
+    }
+    if !root.it.empty && !root.it.has-icon && root.it.glyph != "" : Path {
+        x: root.width * 0.2;
+        y: root.height * 0.2;
+        width: root.width * 0.6;
+        height: root.height * 0.6;
+        viewbox-width: 24;
+        viewbox-height: 24;
+        commands: root.it.glyph;
+        stroke: D.fg;
+        stroke-width: 1.8px;
+        stroke-line-cap: round;
+        fill: transparent;
+    }
+    if !root.it.empty && !root.it.has-icon && root.it.glyph == "" : Text {
+        width: root.width;
+        height: root.height;
+        text: root.it.letter;
+        font-family: D.font;
+        font-weight: 700;
+        font-size: root.width * 0.46;
+        color: D.fg;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+    }
+}
+
+component Banner inherits Rectangle {
+    background: @linear-gradient(180deg, #2b2058, #7a4a96);
+    clip: true;
+    Rectangle {
+        x: root.width * 0.72;
+        y: root.height * 0.16;
+        width: root.height * 0.34;
+        height: self.width;
+        border-radius: self.width / 2;
+        background: #ffb98a;
+    }
+    Path {
+        y: root.height * 0.3;
+        width: root.width;
+        height: root.height * 0.7;
+        viewbox-width: 100;
+        viewbox-height: 40;
+        commands: "M0 40 L0 22 C15 10 30 16 45 20 C60 24 75 8 100 18 L100 40 Z";
+        fill: #231a45;
+    }
+    Path {
+        y: root.height * 0.52;
+        width: root.width;
+        height: root.height * 0.48;
+        viewbox-width: 100;
+        viewbox-height: 40;
+        commands: "M0 40 L0 26 C20 18 40 28 60 24 C80 20 90 26 100 22 L100 40 Z";
+        fill: #181233;
+    }
+}
+
+export component LinksView inherits Rectangle {
+    property <bool> list-mode: D.link-layout == "List";
+    property <bool> labels: D.link-layout != "Apps";
+    property <length> bh: (D.banner && !root.list-mode && D.link-layout == "Apps") ? root.height * 0.26 : 0px;
+    property <length> head: root.bh + 46px;
+    property <length> pad: 16px;
+    property <length> gap: 10px;
+    property <length> tile: (root.width - 2 * root.pad - (D.cols - 1) * root.gap) / D.cols;
+    property <length> rowh: root.tile + (root.labels ? 22px : 0px) + root.gap;
+
+    if root.bh > 0px : Banner {
+        y: 0px;
+        width: root.width;
+        height: root.bh;
+    }
+    Text {
+        x: root.pad;
+        y: root.bh + 12px;
+        width: root.width - 2 * root.pad;
+        text: D.title;
+        font-family: D.font;
+        font-weight: 700;
+        font-size: 20px;
+        color: D.fg;
+        overflow: elide;
+    }
+
+    // ----- plain list (websites) -----
+    if root.list-mode : Flickable {
+        y: root.bh + 54px;
+        width: root.width;
+        height: root.height - root.bh - 54px;
+        viewport-height: D.items.length * 54px + 10px;
+        for entry[i] in D.items : Rectangle {
+            y: i * 54px;
+            width: root.width;
+            height: 54px;
+            Tile {
+                x: root.pad;
+                y: 5px;
+                width: 44px;
+                height: 44px;
+                corner: 11px;
+                it: entry;
+            }
+            Text {
+                x: root.pad + 58px;
+                width: root.width - root.pad * 2 - 58px;
+                height: parent.height;
+                text: entry.name;
+                font-family: D.font;
+                font-size: 22px;
+                font-weight: 300;
+                color: D.fg;
+                vertical-alignment: center;
+                overflow: elide;
+            }
+            TouchArea {
+                clicked => { D.open-item(i); }
+            }
+        }
+    }
+
+    // ----- grid (websites grid, apps, actions) -----
+    if !root.list-mode : Flickable {
+        y: root.head;
+        width: root.width;
+        height: root.height - root.head;
+        viewport-height: Math.ceil(D.items.length / D.cols) * root.rowh + 10px;
+        for entry[i] in D.items : Rectangle {
+            x: root.pad + Math.mod(i, D.cols) * (root.tile + root.gap);
+            y: Math.floor(i / D.cols) * root.rowh;
+            width: root.tile;
+            height: root.tile + 22px;
+            Tile {
+                width: root.tile;
+                height: root.tile;
+                corner: root.tile * 0.26;
+                it: entry;
+            }
+            if root.labels : Text {
+                y: root.tile + 3px;
+                width: parent.width;
+                text: entry.empty ? "Add" : entry.name;
+                font-family: D.font;
+                font-size: 11px;
+                color: D.fg2;
+                horizontal-alignment: center;
+                overflow: elide;
+            }
+            TouchArea {
+                height: root.tile;
+                clicked => {
+                    if (entry.empty) {
+                        D.add-item(i);
+                    } else {
+                        D.open-item(i);
+                    }
+                }
+            }
+        }
+    }
+}
